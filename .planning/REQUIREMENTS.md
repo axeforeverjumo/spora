@@ -20,17 +20,17 @@
 
 ### Sale Order Integration (SALE)
 
-- [ ] **SALE-01**: Sale order tiene relación `segment_ids` (One2many a sale.order.segment)
-- [ ] **SALE-02**: Sale order line tiene campo `segment_id` (Many2one a sale.order.segment)
-- [ ] **SALE-03**: Usuario ve vista árbol expandible de segmentos en formulario de sale order
-- [ ] **SALE-04**: Usuario puede crear nuevo segmento desde formulario de sale order
-- [ ] **SALE-05**: Usuario puede asignar segmento padre al crear segmento
-- [ ] **SALE-06**: Usuario puede asignar productos (sale.order.line) a segmento específico
-- [ ] **SALE-07**: Sistema calcula subtotal de segmento (suma de productos propios)
-- [ ] **SALE-08**: Sistema calcula total de segmento (subtotal propio + total de sub-segmentos)
-- [ ] **SALE-09**: Usuario ve subtotales por segmento en vista árbol
-- [ ] **SALE-10**: Usuario puede expandir/contraer niveles de segmentos en vista árbol
-- [ ] **SALE-11**: Smart button en sale order muestra cantidad de segmentos y abre vista filtrada
+- [x] **SALE-01**: Sale order tiene relación `segment_ids` (One2many a sale.order.segment)
+- [x] **SALE-02**: Sale order line tiene campo `segment_id` (Many2one a sale.order.segment)
+- [x] **SALE-03**: Usuario ve vista árbol expandible de segmentos en formulario de sale order
+- [x] **SALE-04**: Usuario puede crear nuevo segmento desde formulario de sale order
+- [x] **SALE-05**: Usuario puede asignar segmento padre al crear segmento
+- [x] **SALE-06**: Usuario puede asignar productos (sale.order.line) a segmento específico
+- [x] **SALE-07**: Sistema calcula subtotal de segmento (suma de productos propios)
+- [x] **SALE-08**: Sistema calcula total de segmento (subtotal propio + total de sub-segmentos)
+- [x] **SALE-09**: Usuario ve subtotales por segmento en vista árbol
+- [x] **SALE-10**: Usuario puede expandir/contraer niveles de segmentos en vista árbol
+- [x] **SALE-11**: Smart button en sale order muestra cantidad de segmentos y abre vista filtrada
 
 ### Project Integration (PROJ)
 
@@ -119,17 +119,17 @@ Mapeo de requisitos a fases (completado durante creación de roadmap).
 | HIER-08 | Phase 1 | Complete |
 | HIER-09 | Phase 1 | Complete |
 | HIER-10 | Phase 1 | Complete |
-| SALE-01 | Phase 2 | Pending |
-| SALE-02 | Phase 2 | Pending |
-| SALE-03 | Phase 2 | Pending |
-| SALE-04 | Phase 2 | Pending |
-| SALE-05 | Phase 2 | Pending |
-| SALE-06 | Phase 2 | Pending |
-| SALE-07 | Phase 2 | Pending |
-| SALE-08 | Phase 2 | Pending |
-| SALE-09 | Phase 2 | Pending |
-| SALE-10 | Phase 2 | Pending |
-| SALE-11 | Phase 2 | Pending |
+| SALE-01 | Phase 2 | Complete |
+| SALE-02 | Phase 2 | Complete |
+| SALE-03 | Phase 2 | Complete |
+| SALE-04 | Phase 2 | Complete |
+| SALE-05 | Phase 2 | Complete |
+| SALE-06 | Phase 2 | Complete |
+| SALE-07 | Phase 2 | Complete |
+| SALE-08 | Phase 2 | Complete |
+| SALE-09 | Phase 2 | Complete |
+| SALE-10 | Phase 2 | Complete |
+| SALE-11 | Phase 2 | Complete |
 | PROJ-01 | Phase 3 | Pending |
 | PROJ-02 | Phase 3 | Pending |
 | PROJ-03 | Phase 3 | Pending |
