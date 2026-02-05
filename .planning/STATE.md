@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Conversión automática de estructura jerárquica de presupuesto a tareas de proyecto manteniendo relaciones padre-hijo
-**Current focus:** Phase 4 - Automated Task Creation (context complete, ready for planning)
+**Current focus:** Phase 5 - User Experience Polish (UX-optimized computed fields)
 
 ## Current Position
 
-Phase: 4 of 5 (Automated Task Creation)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-05 — Completed 04-02-PLAN.md (Integration testing and refinement)
+Phase: 5 of 5 (User Experience Polish)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-05 — Completed 05-01-PLAN.md (UX-optimized computed fields)
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 6 min
-- Total execution time: 0.93 hours
+- Total plans completed: 9
+- Average duration: 5 min
+- Total execution time: 0.96 hours
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [████████░░] 80%
 | 02 - Sale Order Integration | 2 | 7 min | 4 min |
 | 03 - Project Extension & Security | 2 | 6 min | 3 min |
 | 04 - Automated Task Creation | 2 | 12 min | 6 min |
+| 05 - User Experience Polish | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (2min), 03-02 (4min), 04-01 (6min), 04-02 (6min)
-- Trend: Consistent fast execution, average 4-6 min per plan
+- Last 5 plans: 03-02 (4min), 04-01 (6min), 04-02 (6min), 05-01 (2min)
+- Trend: Very fast execution on UX polish phase (computed fields only)
 
 *Updated after each plan completion*
 
@@ -88,6 +89,10 @@ Recent decisions affecting current work:
 - Cleanup segment tasks before Phase 3 test: Maintains test isolation despite automatic task creation (04-02)
 - Use invalidate_recordset() not refresh(): Proper Odoo ORM cache invalidation (04-02)
 - AUTO-08/09 deferred to Phase 5: Test graceful handling now, implement features later (04-02)
+- store=True on UX computed fields: Prioritize read performance (99% operations) over write performance (05-01)
+- full_path depends on parent_id.full_path: Enables cascade updates when ANY ancestor name changes (05-01)
+- child_depth uses recursive child_ids.child_depth: Bottom-up recomputation for accurate depth calculation (05-01)
+- product_count counts only line_ids: Direct products only, not children (matches user decision UX-06) (05-01)
 
 ### Pending Todos
 
@@ -99,11 +104,11 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-05 20:11 UTC (plan execution)
-Stopped at: Completed 04-02-PLAN.md - Integration testing and refinement for automated task creation
-Next step: Phase 4 complete - ready for Phase 5 (UX and Polish)
+Last session: 2026-02-05 20:49 UTC (plan execution)
+Stopped at: Completed 05-01-PLAN.md - UX-optimized computed fields for hierarchy navigation
+Next step: Phase 5 in progress - ready for 05-02 (View enhancements)
 Resume file: None
 
 ---
 *State initialized: 2026-02-05*
-*Last updated: 2026-02-05 20:11 UTC*
+*Last updated: 2026-02-05 20:49 UTC*
