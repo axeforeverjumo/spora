@@ -48,10 +48,11 @@ Plans:
   5. System displays total for each segment (subtotal + all sub-segment totals)
   6. User can expand/collapse hierarchy levels to navigate structure
   7. Smart button on sale order shows segment count and opens filtered view
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: [To be planned]
+- [ ] 02-01-PLAN.md -- Model extensions (sale.order, sale.order.line, segment computed totals) and views (smart button, segment tab, inline lists)
+- [ ] 02-02-PLAN.md -- Integration tests for all SALE requirements and Docker verification
 
 ### Phase 3: Project Extension & Security
 **Goal**: Project tasks can trace back to originating segments with proper access controls
@@ -109,7 +110,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Model Structure | 2/2 | Complete | 2026-02-05 |
-| 2. Sale Order Integration | 0/TBD | Not started | - |
+| 2. Sale Order Integration | 0/2 | Not started | - |
 | 3. Project Extension & Security | 0/TBD | Not started | - |
 | 4. Automated Task Creation | 0/TBD | Not started | - |
 | 5. User Experience & Polish | 0/TBD | Not started | - |
