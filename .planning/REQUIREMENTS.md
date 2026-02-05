@@ -7,16 +7,16 @@
 
 ### Hierarchical Model (HIER)
 
-- [ ] **HIER-01**: Sistema crea modelo `sale.order.segment` con campo `parent_id` (Many2one a sí mismo)
-- [ ] **HIER-02**: Modelo tiene campo `child_ids` (One2many inverso de parent_id)
-- [ ] **HIER-03**: Modelo usa `_parent_store = True` para optimización de consultas jerárquicas
-- [ ] **HIER-04**: Sistema calcula nivel de segmento automáticamente según profundidad (campo computed)
-- [ ] **HIER-05**: Sistema previene referencias circulares al asignar parent_id
-- [ ] **HIER-06**: Sistema limita jerarquía a máximo 4 niveles de profundidad
-- [ ] **HIER-07**: Usuario puede asignar campo `sequence` para ordenar segmentos hermanos
-- [ ] **HIER-08**: Segmento puede tener productos (via sale.order.line) sin tener sub-segmentos
-- [ ] **HIER-09**: Segmento puede tener sub-segmentos sin tener productos
-- [ ] **HIER-10**: Segmento puede tener productos Y sub-segmentos simultáneamente
+- [x] **HIER-01**: Sistema crea modelo `sale.order.segment` con campo `parent_id` (Many2one a sí mismo)
+- [x] **HIER-02**: Modelo tiene campo `child_ids` (One2many inverso de parent_id)
+- [x] **HIER-03**: Modelo usa `_parent_store = True` para optimización de consultas jerárquicas
+- [x] **HIER-04**: Sistema calcula nivel de segmento automáticamente según profundidad (campo computed)
+- [x] **HIER-05**: Sistema previene referencias circulares al asignar parent_id
+- [x] **HIER-06**: Sistema limita jerarquía a máximo 4 niveles de profundidad
+- [x] **HIER-07**: Usuario puede asignar campo `sequence` para ordenar segmentos hermanos
+- [x] **HIER-08**: Segmento puede tener productos (via sale.order.line) sin tener sub-segmentos
+- [x] **HIER-09**: Segmento puede tener sub-segmentos sin tener productos
+- [x] **HIER-10**: Segmento puede tener productos Y sub-segmentos simultáneamente
 
 ### Sale Order Integration (SALE)
 
@@ -109,16 +109,16 @@ Mapeo de requisitos a fases (completado durante creación de roadmap).
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HIER-01 | Phase 1 | Pending |
-| HIER-02 | Phase 1 | Pending |
-| HIER-03 | Phase 1 | Pending |
-| HIER-04 | Phase 1 | Pending |
-| HIER-05 | Phase 1 | Pending |
-| HIER-06 | Phase 1 | Pending |
-| HIER-07 | Phase 1 | Pending |
-| HIER-08 | Phase 1 | Pending |
-| HIER-09 | Phase 1 | Pending |
-| HIER-10 | Phase 1 | Pending |
+| HIER-01 | Phase 1 | Complete |
+| HIER-02 | Phase 1 | Complete |
+| HIER-03 | Phase 1 | Complete |
+| HIER-04 | Phase 1 | Complete |
+| HIER-05 | Phase 1 | Complete |
+| HIER-06 | Phase 1 | Complete |
+| HIER-07 | Phase 1 | Complete |
+| HIER-08 | Phase 1 | Complete |
+| HIER-09 | Phase 1 | Complete |
+| HIER-10 | Phase 1 | Complete |
 | SALE-01 | Phase 2 | Pending |
 | SALE-02 | Phase 2 | Pending |
 | SALE-03 | Phase 2 | Pending |
