@@ -21,7 +21,7 @@
             <!-- Add segments tab to notebook -->
             <xpath expr="//notebook" position="inside">
                 <page string="Segments" name="segments">
-                    <field name="segment_ids" context="{'default_order_id': active_id}">
+                    <field name="segment_ids" context="{'default_order_id': id}">
                         <list>
                             <field name="sequence" widget="handle"/>
                             <field name="name"/>

@@ -478,9 +478,8 @@ class TestSaleOrderSegmentIntegration(TransactionCase):
 
     def test_segment_requires_order_id(self):
         """Validate creating segment without order_id raises error."""
-        # Odoo 18 required field raises ValidationError (not IntegrityError)
-        # when creating via ORM due to model validation
-        with self.assertRaises((ValidationError, Exception),
+        # Odoo 18 required field raises error when creating via ORM
+        with self.assertRaises(Exception,
                                msg='Creating segment without order_id should raise error'):
             self.Segment.create({
                 'name': 'Orphan Segment',
