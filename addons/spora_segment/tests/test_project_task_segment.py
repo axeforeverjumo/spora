@@ -63,7 +63,7 @@ class TestProjectTaskSegment(TransactionCase):
         cls.product = cls.Product.create({
             'name': 'Test Product',
             'list_price': 100.0,
-            'type': 'consu',
+            'type': 'service',  # Use 'service' for project-related products
         })
 
         # Create two sale orders (one per salesman)
@@ -74,6 +74,19 @@ class TestProjectTaskSegment(TransactionCase):
         cls.order2 = cls.Order.create({
             'partner_id': cls.partner.id,
             'user_id': cls.user_salesman2.id,
+        })
+
+        # Create order lines (needed for project.sale_order_id linkage)
+        cls.OrderLine = cls.env['sale.order.line']
+        cls.order1_line = cls.OrderLine.create({
+            'order_id': cls.order1.id,
+            'product_id': cls.product.id,
+            'product_uom_qty': 1,
+        })
+        cls.order2_line = cls.OrderLine.create({
+            'order_id': cls.order2.id,
+            'product_id': cls.product.id,
+            'product_uom_qty': 1,
         })
 
         # Create segments in each order
@@ -91,10 +104,10 @@ class TestProjectTaskSegment(TransactionCase):
             'order_id': cls.order2.id,
         })
 
-        # Create projects
+        # Create projects (linked via sale_line_id for sale_order_id relationship)
         cls.project1 = cls.Project.create({
             'name': 'Project 1',
-            'sale_order_id': cls.order1.id,
+            'sale_line_id': cls.order1_line.id,
         })
         cls.project_manual = cls.Project.create({
             'name': 'Manual Project',
@@ -145,9 +158,10 @@ class TestProjectTaskSegment(TransactionCase):
         # Create task via .new() to test onchange (not .create() which bypasses onchange)
         task = self.Task.new({
             'name': 'Cross-order task',
-            'project_id': self.project1.id,
-            'segment_id': self.segment_order2_root.id,  # segment from order2, project from order1
         })
+        # Set fields explicitly to ensure they're resolved
+        task.project_id = self.project1
+        task.segment_id = self.segment_order2_root  # segment from order2, project from order1
 
         # Call the onchange method
         result = task._onchange_segment_order_warning()
@@ -176,9 +190,9 @@ class TestProjectTaskSegment(TransactionCase):
         """Validate same-order segment does NOT trigger onchange warning."""
         task = self.Task.new({
             'name': 'Same-order task',
-            'project_id': self.project1.id,
-            'segment_id': self.segment_order1_root.id,  # segment from order1, project from order1
         })
+        task.project_id = self.project1
+        task.segment_id = self.segment_order1_root  # segment from order1, project from order1
 
         result = task._onchange_segment_order_warning()
 
@@ -190,9 +204,9 @@ class TestProjectTaskSegment(TransactionCase):
         # Create segment in order1 and try to use in manual project
         task = self.Task.new({
             'name': 'Manual project task',
-            'project_id': self.project_manual.id,
-            'segment_id': self.segment_order1_root.id,
         })
+        task.project_id = self.project_manual
+        task.segment_id = self.segment_order1_root
 
         result = task._onchange_segment_order_warning()
 
