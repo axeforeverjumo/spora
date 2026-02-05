@@ -5,15 +5,18 @@
         <field name="name">sale.order.segment.tree</field>
         <field name="model">sale.order.segment</field>
         <field name="arch" type="xml">
-            <list>
+            <list decoration-primary="level == 1"
+                  decoration-info="level == 2"
+                  decoration-muted="level == 3"
+                  decoration-warning="level == 4">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
-                <field name="parent_id"/>
-                <field name="level"/>
+                <field name="full_path"/>
                 <field name="child_count"/>
+                <field name="product_count" string="Products"/>
                 <field name="subtotal" sum="Subtotal"/>
                 <field name="total" sum="Total"/>
-                <field name="order_id"/>
+                <field name="level" column_invisible="1"/>
             </list>
         </field>
     </record>
@@ -31,7 +34,17 @@
                                 class="oe_stat_button"
                                 icon="fa-sitemap"
                                 invisible="child_count == 0">
-                            <field name="child_count" widget="statinfo" string="Sub-segments"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="child_count"/>
+                                </span>
+                                <span class="o_stat_text">Sub-segmentos</span>
+                            </div>
+                            <div class="o_stat_info" invisible="child_depth == 0">
+                                <span class="o_stat_text">
+                                    (<field name="child_depth" readonly="1"/> niveles)
+                                </span>
+                            </div>
                         </button>
                     </div>
                     <group>
@@ -43,6 +56,7 @@
                         <group>
                             <field name="sequence"/>
                             <field name="level" readonly="1"/>
+                            <field name="full_path" readonly="1"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="subtotal" readonly="1"/>
                             <field name="total" readonly="1"/>
