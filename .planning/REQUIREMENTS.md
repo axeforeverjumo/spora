@@ -62,12 +62,12 @@
 
 ### User Experience (UX)
 
-- [ ] **UX-01**: Vista árbol usa atributo `recursive="1"` para mostrar jerarquía correctamente
-- [ ] **UX-02**: Usuario ve nivel de profundidad visualmente (indentación) en vista árbol
-- [ ] **UX-03**: Usuario puede reordenar segmentos hermanos mediante drag & drop (handle widget)
-- [ ] **UX-04**: Sistema muestra path completo del segmento (ej: "Fase 1 / Materiales / Cartas")
-- [ ] **UX-05**: Formulario de segmento muestra smart button a sub-segmentos
-- [ ] **UX-06**: Usuario ve cantidad de productos asignados a segmento en vista árbol
+- [x] **UX-01**: Vista árbol usa atributo `recursive="1"` para mostrar jerarquía correctamente
+- [x] **UX-02**: Usuario ve nivel de profundidad visualmente (indentación) en vista árbol
+- [x] **UX-03**: Usuario puede reordenar segmentos hermanos mediante drag & drop (handle widget)
+- [x] **UX-04**: Sistema muestra path completo del segmento (ej: "Fase 1 / Materiales / Cartas")
+- [x] **UX-05**: Formulario de segmento muestra smart button a sub-segmentos
+- [x] **UX-06**: Usuario ve cantidad de productos asignados a segmento en vista árbol
 
 ## v2 Requirements
 
@@ -149,12 +149,12 @@ Mapeo de requisitos a fases (completado durante creación de roadmap).
 | AUTO-10 | Phase 4 | Complete |
 | AUTO-11 | Phase 4 | Complete |
 | AUTO-12 | Phase 4 | Complete |
-| UX-01 | Phase 5 | Pending |
-| UX-02 | Phase 5 | Pending |
-| UX-03 | Phase 5 | Pending |
-| UX-04 | Phase 5 | Pending |
-| UX-05 | Phase 5 | Pending |
-| UX-06 | Phase 5 | Pending |
+| UX-01 | Phase 5 | Complete |
+| UX-02 | Phase 5 | Complete |
+| UX-03 | Phase 5 | Complete |
+| UX-04 | Phase 5 | Complete |
+| UX-05 | Phase 5 | Complete |
+| UX-06 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 46 total
