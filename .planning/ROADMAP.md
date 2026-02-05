@@ -64,10 +64,11 @@ Plans:
   3. Sales User can read and create segments for their quotations
   4. Sales Manager can create, read, update, and delete segments
   5. Segment permissions automatically respect parent sale order access rights
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: [To be planned]
+- [ ] 03-01-PLAN.md -- Model extensions (project.task segment_id, segment display_name, deletion protection, project constraint, views, security rules)
+- [ ] 03-02-PLAN.md -- Comprehensive tests for all PROJ and SEC requirements and Docker verification
 
 ### Phase 4: Automated Task Creation
 **Goal**: Confirming a sale order automatically creates project with hierarchical tasks matching segment structure
@@ -111,7 +112,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Model Structure | 2/2 | Complete | 2026-02-05 |
 | 2. Sale Order Integration | 2/2 | Complete | 2026-02-05 |
-| 3. Project Extension & Security | 0/TBD | Not started | - |
+| 3. Project Extension & Security | 0/2 | Not started | - |
 | 4. Automated Task Creation | 0/TBD | Not started | - |
 | 5. User Experience & Polish | 0/TBD | Not started | - |
 
