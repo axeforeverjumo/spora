@@ -101,6 +101,13 @@ class SaleOrderSegment(models.Model):
         compute='_compute_child_count',
         help='Number of direct child segments',
     )
+    full_path = fields.Char(
+        string='Full Path',
+        compute='_compute_full_path',
+        recursive=True,
+        store=True,
+        help='Full hierarchical path: "Root / Parent / This Segment"',
+    )
 
     # --- Computed methods ---
     @api.depends('parent_id', 'parent_id.level')
@@ -115,6 +122,15 @@ class SaleOrderSegment(models.Model):
     def _compute_child_count(self):
         for segment in self:
             segment.child_count = len(segment.child_ids)
+
+    @api.depends('name', 'parent_id.full_path')
+    def _compute_full_path(self):
+        """Compute full hierarchical breadcrumb path."""
+        for segment in self:
+            if segment.parent_id:
+                segment.full_path = '%s / %s' % (segment.parent_id.full_path, segment.name)
+            else:
+                segment.full_path = segment.name
 
     @api.depends('line_ids.price_subtotal')
     def _compute_subtotal(self):
