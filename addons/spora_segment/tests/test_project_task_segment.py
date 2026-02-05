@@ -284,6 +284,13 @@ class TestProjectTaskSegment(TransactionCase):
 
     def test_project_sale_order_change_allowed_without_segment_tasks(self):
         """Validate changing project.sale_order_id allowed when tasks have NO segments."""
+        # Ensure project1 has no segment tasks (cleanup from any previous tests)
+        segment_tasks = self.Task.search([
+            ('project_id', '=', self.project1.id),
+            ('segment_id', '!=', False)
+        ])
+        segment_tasks.unlink()
+
         # Create task WITHOUT segment
         task = self.Task.create({
             'name': 'Task without segment',
