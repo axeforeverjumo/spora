@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Conversión automática de estructura jerárquica de presupuesto a tareas de proyecto manteniendo relaciones padre-hijo
-**Current focus:** Phase 2 - Sale Order Integration
+**Current focus:** Phase 3 - Project Extension & Security
 
 ## Current Position
 
-Phase: 2 of 5 (Sale Order Integration)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-05 — Completed 02-02-PLAN.md (Integration tests)
+Phase: 3 of 5 (Project Extension & Security)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-05 — Completed 03-01-PLAN.md (Project model extensions and security)
 
-Progress: [████░░░░░░] 40%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 10 min
-- Total execution time: 0.63 hours
+- Total plans completed: 5
+- Average duration: 8 min
+- Total execution time: 0.67 hours
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [████░░░░░░] 40%
 |-------|-------|-------|----------|
 | 01 - Foundation & Model Structure | 2 | 31 min | 16 min |
 | 02 - Sale Order Integration | 2 | 7 min | 4 min |
+| 03 - Project Extension & Security | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2min), 01-02 (29min), 02-01 (2min), 02-02 (5min)
-- Trend: Phase 2 complete - testing phase faster than implementation
+- Last 5 plans: 01-02 (29min), 02-01 (2min), 02-02 (5min), 03-01 (2min)
+- Trend: Consistent fast execution on extension phases
 
 *Updated after each plan completion*
 
@@ -64,6 +65,10 @@ Recent decisions affecting current work:
 - Use Exception base class in assertRaises: For required field validation compatibility (02-02)
 - Phase 1 tests updated with order_id: Required field from Phase 2 affects Phase 1 tests (02-02)
 - View context uses 'id' not 'active_id': Form view compatibility in Odoo 18 (02-02)
+- Onchange warning (not constraint) for cross-order segment: Soft validation allows user to proceed after acknowledgment (03-01)
+- Separate read/write record rules for Sales Users: Enables read-all, write-own access pattern (03-01)
+- segment_id ondelete='restrict': Database-level backup for Python @api.ondelete protection (03-01)
+- segment_id positioned after project_id: Logical field grouping in task form (03-01)
 
 ### Pending Todos
 
@@ -76,9 +81,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-05 (plan execution)
-Stopped at: Completed 02-02-PLAN.md - Phase 2 complete, ready for Phase 3
+Stopped at: Completed 03-01-PLAN.md - Project extensions and security complete, ready for 03-02
 Resume file: None
 
 ---
 *State initialized: 2026-02-05*
-*Last updated: 2026-02-05 17:12 UTC*
+*Last updated: 2026-02-05 18:54 UTC*
