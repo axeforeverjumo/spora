@@ -1,7 +1,7 @@
 import logging
 
 from odoo import models, fields, api
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -186,6 +186,26 @@ class SaleOrderSegment(models.Model):
             self._get_max_descendant_depth(child)
             for child in segment.child_ids
         )
+
+    # --- Display name ---
+    def _compute_display_name(self):
+        """Display as 'SO001 / Segment Name' for better identification in task form."""
+        for segment in self:
+            if segment.order_id:
+                segment.display_name = '%s / %s' % (segment.order_id.name, segment.name)
+            else:
+                segment.display_name = segment.name
+
+    # --- Deletion protection ---
+    @api.ondelete(at_uninstall=False)
+    def _unlink_if_no_tasks(self):
+        """Prevent deletion if project tasks reference this segment."""
+        task_count = self.env['project.task'].search_count([('segment_id', 'in', self.ids)])
+        if task_count > 0:
+            raise UserError(
+                'No se puede eliminar segmento(s) porque están referenciados por tareas de proyecto. '
+                'Elimine las referencias a segmentos de las tareas primero, o elimine las tareas.'
+            )
 
     # --- Action methods ---
     def action_view_children(self):
