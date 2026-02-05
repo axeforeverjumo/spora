@@ -11,6 +11,9 @@
                 <field name="parent_id"/>
                 <field name="level"/>
                 <field name="child_count"/>
+                <field name="subtotal" sum="Subtotal"/>
+                <field name="total" sum="Total"/>
+                <field name="order_id"/>
             </list>
         </field>
     </record>
@@ -34,17 +37,30 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="parent_id"/>
+                            <field name="parent_id" domain="[('order_id', '=', order_id)]"/>
                             <field name="order_id"/>
                         </group>
                         <group>
                             <field name="sequence"/>
                             <field name="level" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="subtotal" readonly="1"/>
+                            <field name="total" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Description" name="description">
                             <field name="description"/>
+                        </page>
+                        <page string="Order Lines" name="order_lines">
+                            <field name="line_ids">
+                                <list>
+                                    <field name="product_id"/>
+                                    <field name="product_uom_qty"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal"/>
+                                </list>
+                            </field>
                         </page>
                         <page string="Sub-segments" name="children">
                             <field name="child_ids">
