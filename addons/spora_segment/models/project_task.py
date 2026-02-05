@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 
 class ProjectTask(models.Model):
@@ -9,6 +10,7 @@ class ProjectTask(models.Model):
         string='Budget Segment',
         index=True,
         ondelete='restrict',
+        domain="[('order_id', '=', project_id.sale_order_id)]",
         help='Reference to the originating budget segment. '
              'Only visible for projects linked to sale orders.',
     )
@@ -32,3 +34,19 @@ class ProjectTask(models.Model):
                         ) % self.segment_id.display_name,
                     }
                 }
+
+    @api.constrains('segment_id', 'project_id')
+    def _check_segment_order_match(self):
+        """Hard constraint: Segment MUST belong to project's sale order.
+
+        This prevents data corruption by blocking saves when segment
+        does not match project's sale order. Complements the onchange warning.
+        """
+        for task in self:
+            if task.segment_id and task.project_id and task.project_id.sale_order_id:
+                if task.segment_id.order_id != task.project_id.sale_order_id:
+                    raise ValidationError(
+                        'Error: El segmento "%s" no pertenece al presupuesto del proyecto "%s". '
+                        'Solo puedes asignar segmentos del presupuesto "%s".'
+                        % (task.segment_id.display_name, task.project_id.name, task.project_id.sale_order_id.name)
+                    )
