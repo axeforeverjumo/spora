@@ -3,7 +3,9 @@
 Tests validate all PROJ and SEC requirements including:
 - PROJ-01: segment_id field on project.task
 - PROJ-02: Field visibility in task form (when project has sale_order_id)
-- PROJ-03: Cross-order segment assignment warning (onchange advisory, not blocking)
+- PROJ-03: Cross-order segment assignment (onchange warning + C2 hard constraint)
+- C1 Fix: sale_order_id change detection (initial assignment OK, changes blocked)
+- C2 Fix: Hard constraint prevents cross-order segment assignment at save
 - SEC-01: Access rights via ir.model.access.csv
 - SEC-02: Sales User can create/read segments on own orders
 - SEC-03: Sales Manager full CRUD on all segments
@@ -173,18 +175,16 @@ class TestProjectTaskSegment(TransactionCase):
         self.assertIn('message', result['warning'], 'Warning should have message')
 
     def test_cross_order_segment_can_save(self):
-        """Validate task with cross-order segment CAN be saved (onchange is advisory)."""
-        # Create task via .create() to verify save succeeds despite warning
-        task = self.Task.create({
-            'name': 'Cross-order task saved',
-            'project_id': self.project1.id,
-            'segment_id': self.segment_order2_root.id,  # segment from order2
-        })
-
-        # Assert task was created successfully
-        self.assertTrue(task.id, 'Task should be created despite cross-order segment')
-        self.assertEqual(task.segment_id.id, self.segment_order2_root.id,
-                         'Task segment_id should reference cross-order segment')
+        """Validate task with cross-order segment raises ValidationError (C2 hard constraint)."""
+        # After C2 fix: _check_segment_order_match constraint blocks cross-order saves
+        # Onchange warning is still advisory, but constraint prevents actual save
+        with self.assertRaises(ValidationError,
+                               msg='Cross-order segment assignment should raise ValidationError'):
+            self.Task.create({
+                'name': 'Cross-order task saved',
+                'project_id': self.project1.id,
+                'segment_id': self.segment_order2_root.id,  # segment from order2
+            })
 
     def test_same_order_segment_no_warning(self):
         """Validate same-order segment does NOT trigger onchange warning."""
@@ -269,7 +269,10 @@ class TestProjectTaskSegment(TransactionCase):
     # --- Project sale_order_id change constraint ---
 
     def test_project_sale_order_change_blocked_with_segment_tasks(self):
-        """Validate changing project.sale_order_id blocked when tasks have segments."""
+        """Validate changing project.sale_order_id blocked when tasks have segments (C1 refined logic)."""
+        # After C1 fix: Initial assignment (None -> SO) allowed, but changes (SO1 -> SO2) blocked
+        # project1 already has sale_order_id via sale_line_id -> order1
+
         # Create task with segment
         task = self.Task.create({
             'name': 'Task with segment blocking change',
@@ -277,7 +280,8 @@ class TestProjectTaskSegment(TransactionCase):
             'segment_id': self.segment_order1_root.id,
         })
 
-        # Try to change project sale_order_id
+        # Try to CHANGE project sale_order_id (order1 -> order2)
+        # This is a change, not initial assignment, so should be blocked
         with self.assertRaises(ValidationError,
                                msg='Changing project sale_order_id with segment tasks should raise ValidationError'):
             self.project1.write({'sale_order_id': self.order2.id})
