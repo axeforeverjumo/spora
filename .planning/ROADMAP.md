@@ -83,10 +83,11 @@ Plans:
   6. Task receives assigned user and date range from segment (if defined)
   7. Task links back to originating segment via segment_id field
   8. If one task creation fails, other tasks in batch are not affected (transaction isolation)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: [To be planned]
+- [ ] 04-01-PLAN.md -- Core automation: action_confirm override, level-by-level task creation, idempotence, savepoint isolation
+- [ ] 04-02-PLAN.md -- Comprehensive tests for all AUTO requirements and Docker verification
 
 ### Phase 5: User Experience & Polish
 **Goal**: Users navigate segment hierarchies efficiently with visual feedback and intuitive ordering
@@ -113,7 +114,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Foundation & Model Structure | 2/2 | Complete | 2026-02-05 |
 | 2. Sale Order Integration | 2/2 | Complete | 2026-02-05 |
 | 3. Project Extension & Security | 2/2 | Complete | 2026-02-05 |
-| 4. Automated Task Creation | 0/TBD | Not started | - |
+| 4. Automated Task Creation | 0/2 | Planned | - |
 | 5. User Experience & Polish | 0/TBD | Not started | - |
 
 ---
