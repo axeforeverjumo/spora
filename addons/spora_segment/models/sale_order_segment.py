@@ -42,6 +42,7 @@ class SaleOrderSegment(models.Model):
         string='Parent Segment',
         index=True,
         ondelete='cascade',
+        domain="[('order_id', '=', order_id)]",
     )
     parent_path = fields.Char(
         index=True,
@@ -53,14 +54,38 @@ class SaleOrderSegment(models.Model):
         string='Child Segments',
     )
 
-    # --- Future integration field (Phase 2) ---
+    # --- Sale order integration ---
     order_id = fields.Many2one(
         'sale.order',
         string='Sale Order',
         index=True,
         ondelete='cascade',
-        required=False,
-        help='The sale order this segment belongs to. Will be required in Phase 2.',
+        required=True,
+        help='The sale order this segment belongs to.',
+    )
+    currency_id = fields.Many2one(
+        related='order_id.currency_id',
+        store=True,
+        readonly=True,
+    )
+    line_ids = fields.One2many(
+        'sale.order.line',
+        'segment_id',
+        string='Order Lines',
+    )
+    subtotal = fields.Monetary(
+        string='Subtotal',
+        compute='_compute_subtotal',
+        store=True,
+        currency_field='currency_id',
+        help='Sum of order lines directly assigned to this segment.',
+    )
+    total = fields.Monetary(
+        string='Total',
+        compute='_compute_total',
+        store=True,
+        currency_field='currency_id',
+        help='Subtotal plus total of all child segments (recursive).',
     )
 
     # --- Computed fields ---
@@ -91,7 +116,30 @@ class SaleOrderSegment(models.Model):
         for segment in self:
             segment.child_count = len(segment.child_ids)
 
+    @api.depends('line_ids.price_subtotal')
+    def _compute_subtotal(self):
+        """Compute subtotal: sum of own order lines."""
+        for segment in self:
+            segment.subtotal = sum(segment.line_ids.mapped('price_subtotal'))
+
+    @api.depends('subtotal', 'child_ids.total')
+    def _compute_total(self):
+        """Compute total recursively: own subtotal + children totals."""
+        for segment in self:
+            children_total = sum(segment.child_ids.mapped('total'))
+            segment.total = segment.subtotal + children_total
+
     # --- Constraints ---
+    @api.constrains('parent_id', 'order_id')
+    def _check_parent_same_order(self):
+        """Validate parent segment belongs to same order."""
+        for segment in self:
+            if segment.parent_id and segment.parent_id.order_id != segment.order_id:
+                raise ValidationError(
+                    'Error: Cannot set parent segment "%s" because it belongs '
+                    'to a different sale order.' % segment.parent_id.name
+                )
+
     @api.constrains('parent_id')
     def _check_hierarchy(self):
         """Validate no circular references and max depth of 4 levels."""
