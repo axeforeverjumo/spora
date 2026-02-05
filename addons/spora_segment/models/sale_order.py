@@ -144,7 +144,7 @@ class SaleOrder(models.Model):
             'project_id': project.id,
             'segment_id': segment.id,
             'description': self._format_products_description(segment),
-            'planned_hours': sum(segment.line_ids.mapped('product_uom_qty')),
+            'allocated_hours': sum(segment.line_ids.mapped('product_uom_qty')),
             'partner_id': self.partner_id.id,
             'company_id': self.company_id.id,
             'sequence': segment.sequence,
