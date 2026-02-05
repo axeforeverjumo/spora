@@ -30,10 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. System prevents circular references (segment cannot be its own ancestor)
   4. System blocks creation of segments deeper than 4 levels
   5. User can create segments with products only, sub-segments only, or both simultaneously
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: [To be planned]
+- [ ] 01-01-PLAN.md -- Module scaffold, segment model with hierarchy logic, security, and views
+- [ ] 01-02-PLAN.md -- Comprehensive hierarchy tests and Docker verification
 
 ### Phase 2: Sale Order Integration
 **Goal**: Users can organize sale order line items into hierarchical segments with automatic subtotal calculations
@@ -103,11 +104,11 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Model Structure | 0/TBD | Not started | - |
+| 1. Foundation & Model Structure | 0/2 | Planned | - |
 | 2. Sale Order Integration | 0/TBD | Not started | - |
 | 3. Project Extension & Security | 0/TBD | Not started | - |
 | 4. Automated Task Creation | 0/TBD | Not started | - |
