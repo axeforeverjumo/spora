@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Model Structure** - Create segment model with hierarchy and validation
 - [x] **Phase 2: Sale Order Integration** - Connect segments to sale orders with computed totals
-- [ ] **Phase 3: Project Extension & Security** - Extend project tasks and define access rights
+- [x] **Phase 3: Project Extension & Security** - Extend project tasks and define access rights
 - [ ] **Phase 4: Automated Task Creation** - Implement segment-to-task conversion workflow
 - [ ] **Phase 5: User Experience & Polish** - Enhance navigation, ordering, and visual feedback
 
@@ -67,8 +67,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Model extensions (project.task segment_id, segment display_name, deletion protection, project constraint, views, security rules)
-- [ ] 03-02-PLAN.md -- Comprehensive tests for all PROJ and SEC requirements and Docker verification
+- [x] 03-01-PLAN.md -- Model extensions (project.task segment_id, segment display_name, deletion protection, project constraint, views, security rules)
+- [x] 03-02-PLAN.md -- Comprehensive tests for all PROJ and SEC requirements and Docker verification
 
 ### Phase 4: Automated Task Creation
 **Goal**: Confirming a sale order automatically creates project with hierarchical tasks matching segment structure
@@ -112,7 +112,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Model Structure | 2/2 | Complete | 2026-02-05 |
 | 2. Sale Order Integration | 2/2 | Complete | 2026-02-05 |
-| 3. Project Extension & Security | 0/2 | Not started | - |
+| 3. Project Extension & Security | 2/2 | Complete | 2026-02-05 |
 | 4. Automated Task Creation | 0/TBD | Not started | - |
 | 5. User Experience & Polish | 0/TBD | Not started | - |
 
