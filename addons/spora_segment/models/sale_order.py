@@ -85,6 +85,15 @@ class SaleOrder(models.Model):
             )
             return
 
+        # Validate project is active
+        if not project.active:
+            _logger.warning(
+                'Project %s for order %s is archived. Skipping segment task creation.',
+                project.name,
+                self.name
+            )
+            return
+
         # Map segment.id -> task.id for parent_id resolution
         segment_to_task = {}
 
