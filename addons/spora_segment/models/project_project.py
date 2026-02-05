@@ -1,32 +1,51 @@
-from odoo import models, api
+from odoo import models
 from odoo.exceptions import ValidationError
 
 
 class ProjectProject(models.Model):
     _inherit = 'project.project'
 
-    @api.constrains('sale_order_id')
-    def _check_sale_order_change_with_segments(self):
-        """Prevent changing sale_order_id if tasks have segment references.
+    def write(self, vals):
+        """Override write to prevent sale_order changes when tasks have segments.
 
-        Only blocks if sale_order_id already existed AND is being changed.
-        Allows initial assignment (None -> SO) and clearing (SO -> None).
+        Intercepts write() to validate sale_line_id changes before they happen.
+        Blocks changing the linked sale order if tasks reference segments.
         """
-        for project in self:
-            if not project.sale_order_id:
-                # Permitir limpiar sale_order_id
-                continue
+        # If sale_line_id is being changed, validate before write
+        if 'sale_line_id' in vals:
+            for project in self:
+                origin_line = project.sale_line_id
+                new_line_id = vals.get('sale_line_id')
 
-            # Detectar si es un cambio real (no una asignación inicial)
-            if project._origin.sale_order_id and project._origin.sale_order_id != project.sale_order_id:
-                task_with_segment = self.env['project.task'].search_count([
-                    ('project_id', '=', project.id),
-                    ('segment_id', '!=', False)
-                ])
-                if task_with_segment > 0:
-                    raise ValidationError(
-                        'No se puede cambiar el presupuesto del proyecto "%s" de "%s" a "%s" '
-                        'porque contiene tareas vinculadas a segmentos. '
-                        'Elimine las referencias a segmentos de las tareas primero.'
-                        % (project.name, project._origin.sale_order_id.name, project.sale_order_id.name)
-                    )
+                # Allow initial assignment (None -> line)
+                if not origin_line:
+                    continue
+
+                # Allow clearing (line -> None)
+                if not new_line_id:
+                    continue
+
+                # Get new line record
+                new_line = self.env['sale.order.line'].browse(new_line_id)
+
+                # Check if order is changing
+                origin_order = origin_line.order_id
+                new_order = new_line.order_id
+
+                if origin_order != new_order:
+                    # Order is changing, check for segment tasks
+                    task_with_segment = self.env['project.task'].search_count([
+                        ('project_id', '=', project.id),
+                        ('segment_id', '!=', False)
+                    ])
+
+                    if task_with_segment > 0:
+                        raise ValidationError(
+                            'No se puede cambiar el presupuesto del proyecto "%s" de "%s" a "%s" '
+                            'porque contiene tareas vinculadas a segmentos. '
+                            'Elimine las referencias a segmentos de las tareas primero.'
+                            % (project.name, origin_order.name, new_order.name)
+                        )
+
+        # Call super to execute the actual write
+        return super().write(vals)

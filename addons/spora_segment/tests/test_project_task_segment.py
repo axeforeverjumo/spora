@@ -280,32 +280,54 @@ class TestProjectTaskSegment(TransactionCase):
             'segment_id': self.segment_order1_root.id,
         })
 
-        # Try to CHANGE project sale_order_id (order1 -> order2)
+        # Try to CHANGE project sale_order via sale_line_id (order1 -> order2)
+        # sale_order_id is readonly, so we must change sale_line_id which updates order
         # This is a change, not initial assignment, so should be blocked
         with self.assertRaises(ValidationError,
-                               msg='Changing project sale_order_id with segment tasks should raise ValidationError'):
-            self.project1.write({'sale_order_id': self.order2.id})
+                               msg='Changing project sale_line_id (and thus sale_order_id) with segment tasks should raise ValidationError'):
+            self.project1.write({'sale_line_id': self.order2_line.id})
 
     def test_project_sale_order_change_allowed_without_segment_tasks(self):
         """Validate changing project.sale_order_id allowed when tasks have NO segments."""
-        # Ensure project1 has no segment tasks (cleanup from any previous tests)
+        # Create NEW project without existing segment tasks to avoid pollution
+        order_new = self.Order.create({
+            'partner_id': self.partner.id,
+        })
+        line_new = self.OrderLine.create({
+            'order_id': order_new.id,
+            'product_id': self.product.id,
+            'product_uom_qty': 1,
+        })
+
+        project_clean = self.Project.create({
+            'name': 'Clean Project',
+            'sale_line_id': line_new.id,
+        })
+
+        # Ensure NO segment tasks exist
         segment_tasks = self.Task.search([
-            ('project_id', '=', self.project1.id),
+            ('project_id', '=', project_clean.id),
             ('segment_id', '!=', False)
         ])
-        segment_tasks.unlink()
+        self.assertEqual(len(segment_tasks), 0,
+                        'New project should have NO segment tasks')
 
         # Create task WITHOUT segment
         task = self.Task.create({
             'name': 'Task without segment',
-            'project_id': self.project1.id,
+            'project_id': project_clean.id,
         })
 
         # Change should succeed (no segment tasks to block)
-        self.project1.write({'sale_order_id': self.order2.id})
+        # Change via sale_line_id since sale_order_id is readonly
+        project_clean.write({'sale_line_id': self.order2_line.id})
 
-        self.assertEqual(self.project1.sale_order_id.id, self.order2.id,
+        self.assertEqual(project_clean.sale_order_id.id, self.order2.id,
                          'Project sale_order_id should change when no segment tasks exist')
+
+        # Cleanup
+        task.unlink()
+        project_clean.unlink()
 
     # --- SEC-02/SEC-04: Sales User create/read/write permissions ---
 
