@@ -5,33 +5,34 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Conversión automática de estructura jerárquica de presupuesto a tareas de proyecto manteniendo relaciones padre-hijo
-**Current focus:** Phase 1 - Foundation & Model Structure
+**Current focus:** Phase 2 - Sale Order Integration
 
 ## Current Position
 
-Phase: 1 of 5 (Foundation & Model Structure)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-05 — Completed 01-02-PLAN.md (Comprehensive hierarchy testing)
+Phase: 2 of 5 (Sale Order Integration)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-05 — Completed 02-01-PLAN.md (Model extensions and views)
 
-Progress: [██░░░░░░░░] 20%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 16 min
-- Total execution time: 0.52 hours
+- Total plans completed: 3
+- Average duration: 12 min
+- Total execution time: 0.57 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 - Foundation & Model Structure | 2 | 31 min | 16 min |
+| 02 - Sale Order Integration | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2min), 01-02 (29min)
-- Trend: Testing phase longer than implementation (expected)
+- Last 5 plans: 01-01 (2min), 01-02 (29min), 02-01 (2min)
+- Trend: Phase 2 implementation faster than Phase 1 (building on foundation)
 
 *Updated after each plan completion*
 
@@ -54,6 +55,12 @@ Recent decisions affecting current work:
 - child_count needs @api.depends('child_ids'): Required for automatic recomputation (01-02)
 - Odoo 18 requires <list> not <tree>: View schema change in Odoo 18 (01-02)
 - Test via Odoo shell not --test-tags: More reliable output in development (01-02)
+- Use view_mode='list,form' not 'tree,form': Odoo 18 syntax consistency (02-01)
+- store=True on computed Monetary fields: Performance with recursive totals (02-01)
+- Domain + @api.constrains pattern: UI filtering + data integrity backup (02-01)
+- Dotted path in @api.depends('line_ids.price_subtotal'): Tracks field changes, not just record add/remove (02-01)
+- Recursive @api.depends('child_ids.total'): Creates cascade recomputation up hierarchy (02-01)
+- currency_id as related field: Required for Monetary field rendering (02-01)
 
 ### Pending Todos
 
@@ -66,9 +73,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-05 (plan execution)
-Stopped at: Completed 01-02-PLAN.md - Phase 1 complete, ready for Phase 2
+Stopped at: Completed 02-01-PLAN.md - Phase 2 in progress, ready for 02-02
 Resume file: None
 
 ---
 *State initialized: 2026-02-05*
-*Last updated: 2026-02-05 15:42 UTC*
+*Last updated: 2026-02-05 17:04 UTC*
