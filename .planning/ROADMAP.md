@@ -99,10 +99,11 @@ Plans:
   3. User can reorder sibling segments via drag-and-drop handle
   4. Segment form shows smart button to child segments with count
   5. Tree view displays product count for each segment
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: [To be planned]
+- [ ] 05-01-PLAN.md -- Model enhancements: full_path, child_depth, product_count computed fields
+- [ ] 05-02-PLAN.md -- View enhancements with decorations, smart button depth, and UX tests
 
 ## Progress
 
@@ -115,7 +116,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Sale Order Integration | 2/2 | Complete | 2026-02-05 |
 | 3. Project Extension & Security | 2/2 | Complete | 2026-02-05 |
 | 4. Automated Task Creation | 2/2 | Complete | 2026-02-05 |
-| 5. User Experience & Polish | 0/TBD | Not started | - |
+| 5. User Experience & Polish | 0/2 | Planned | - |
 
 ---
 *Roadmap created: 2026-02-05*
