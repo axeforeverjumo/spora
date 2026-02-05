@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 2 of 5 (Sale Order Integration)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-05 — Completed 02-01-PLAN.md (Model extensions and views)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-05 — Completed 02-02-PLAN.md (Integration tests)
 
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 12 min
-- Total execution time: 0.57 hours
+- Total plans completed: 4
+- Average duration: 10 min
+- Total execution time: 0.63 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 - Foundation & Model Structure | 2 | 31 min | 16 min |
-| 02 - Sale Order Integration | 1 | 2 min | 2 min |
+| 02 - Sale Order Integration | 2 | 7 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2min), 01-02 (29min), 02-01 (2min)
-- Trend: Phase 2 implementation faster than Phase 1 (building on foundation)
+- Last 5 plans: 01-01 (2min), 01-02 (29min), 02-01 (2min), 02-02 (5min)
+- Trend: Phase 2 complete - testing phase faster than implementation
 
 *Updated after each plan completion*
 
@@ -61,6 +61,9 @@ Recent decisions affecting current work:
 - Dotted path in @api.depends('line_ids.price_subtotal'): Tracks field changes, not just record add/remove (02-01)
 - Recursive @api.depends('child_ids.total'): Creates cascade recomputation up hierarchy (02-01)
 - currency_id as related field: Required for Monetary field rendering (02-01)
+- Use Exception base class in assertRaises: For required field validation compatibility (02-02)
+- Phase 1 tests updated with order_id: Required field from Phase 2 affects Phase 1 tests (02-02)
+- View context uses 'id' not 'active_id': Form view compatibility in Odoo 18 (02-02)
 
 ### Pending Todos
 
@@ -73,9 +76,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-05 (plan execution)
-Stopped at: Completed 02-01-PLAN.md - Phase 2 in progress, ready for 02-02
+Stopped at: Completed 02-02-PLAN.md - Phase 2 complete, ready for Phase 3
 Resume file: None
 
 ---
 *State initialized: 2026-02-05*
-*Last updated: 2026-02-05 17:04 UTC*
+*Last updated: 2026-02-05 17:12 UTC*
