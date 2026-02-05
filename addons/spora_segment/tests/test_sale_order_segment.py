@@ -12,7 +12,7 @@ Tests validate all HIER-01 through HIER-10 requirements including:
 """
 
 from odoo.tests import TransactionCase, tagged
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 
 @tagged('at_install')
@@ -131,8 +131,8 @@ class TestSaleOrderSegment(TransactionCase):
         root = self.Segment.create({'name': 'Root'})
         child = self.Segment.create({'name': 'Child', 'parent_id': root.id})
 
-        with self.assertRaises(ValidationError,
-                               msg='Setting root.parent_id = child should raise ValidationError'):
+        with self.assertRaises(UserError,
+                               msg='Setting root.parent_id = child should raise UserError (Recursion Detected)'):
             root.write({'parent_id': child.id})
 
     def test_circular_reference_indirect(self):
@@ -141,16 +141,16 @@ class TestSaleOrderSegment(TransactionCase):
         b = self.Segment.create({'name': 'B', 'parent_id': a.id})
         c = self.Segment.create({'name': 'C', 'parent_id': b.id})
 
-        with self.assertRaises(ValidationError,
-                               msg='Creating indirect cycle should raise ValidationError'):
+        with self.assertRaises(UserError,
+                               msg='Creating indirect cycle should raise UserError (Recursion Detected)'):
             a.write({'parent_id': c.id})
 
     def test_self_parent_blocked(self):
         """Validate self-reference (segment as its own parent) is blocked."""
         segment = self.Segment.create({'name': 'Self-Ref Test'})
 
-        with self.assertRaises(ValidationError,
-                               msg='Setting segment.parent_id = segment.id should raise ValidationError'):
+        with self.assertRaises(UserError,
+                               msg='Setting segment.parent_id = segment.id should raise UserError (Recursion Detected)'):
             segment.write({'parent_id': segment.id})
 
     # --- HIER-06: 4-level depth limit ---
@@ -179,19 +179,20 @@ class TestSaleOrderSegment(TransactionCase):
 
     def test_depth_limit_reparent_blocked(self):
         """Validate reparenting that would exceed depth limit is blocked."""
-        # Create a level-2 parent
+        # Create a level-3 parent (L1->L2->L3)
         root1 = self.Segment.create({'name': 'Root 1'})
         parent_l2 = self.Segment.create({'name': 'Parent L2', 'parent_id': root1.id})
+        parent_l3 = self.Segment.create({'name': 'Parent L3', 'parent_id': parent_l2.id})
 
-        # Create a 3-level deep subtree elsewhere
+        # Create a 2-level deep subtree elsewhere (L1->L2->L3)
         root2 = self.Segment.create({'name': 'Root 2'})
         subtree_l2 = self.Segment.create({'name': 'Subtree L2', 'parent_id': root2.id})
         subtree_l3 = self.Segment.create({'name': 'Subtree L3', 'parent_id': subtree_l2.id})
 
-        # Try to move subtree_l2 under parent_l2 (would create L3->L4->L5)
+        # Try to move subtree_l2 under parent_l3 (would create L4->L5->L6, exceeds limit)
         with self.assertRaises(ValidationError,
                                msg='Reparenting subtree that would exceed depth should raise ValidationError'):
-            subtree_l2.write({'parent_id': parent_l2.id})
+            subtree_l2.write({'parent_id': parent_l3.id})
 
     def test_reparent_subtree_exceeds_depth(self):
         """CRITICAL: Validate reparenting a deep subtree exceeds depth limit.

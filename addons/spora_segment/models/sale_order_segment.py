@@ -86,6 +86,7 @@ class SaleOrderSegment(models.Model):
             else:
                 segment.level = 1
 
+    @api.depends('child_ids')
     def _compute_child_count(self):
         for segment in self:
             segment.child_count = len(segment.child_ids)
