@@ -10,11 +10,14 @@
     'author': 'Spora',
     'depends': [
         'sale',
+        'project',
     ],
     'data': [
         'security/ir.model.access.csv',
+        'security/segment_security.xml',
         'views/sale_order_segment_views.xml',
         'views/sale_order_views.xml',
+        'views/project_task_views.xml',
     ],
     'installable': True,
     'application': False,

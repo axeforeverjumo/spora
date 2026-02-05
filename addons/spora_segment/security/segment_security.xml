@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Record rule: Sales Users can read ALL segments -->
+    <record id="segment_rule_salesman_read" model="ir.rule">
+        <field name="name">Segments: Sales Users read all</field>
+        <field name="model_id" ref="model_sale_order_segment"/>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!-- Record rule: Sales Users can write/create segments on own orders -->
+    <record id="segment_rule_salesman_write" model="ir.rule">
+        <field name="name">Segments: Sales Users edit own orders only</field>
+        <field name="model_id" ref="model_sale_order_segment"/>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+        <field name="perm_read" eval="0"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="domain_force">[
+            '|',
+            ('order_id.user_id', '=', user.id),
+            ('order_id.user_id', '=', False)
+        ]</field>
+    </record>
+
+    <!-- Record rule: Sales Managers have full access to all segments -->
+    <record id="segment_rule_manager_all" model="ir.rule">
+        <field name="name">Segments: Sales Managers full access</field>
+        <field name="model_id" ref="model_sale_order_segment"/>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_manager'))]"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+</odoo>
