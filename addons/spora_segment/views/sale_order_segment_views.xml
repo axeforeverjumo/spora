@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Tree View -->
+    <!-- List View -->
     <record id="sale_order_segment_view_tree" model="ir.ui.view">
         <field name="name">sale.order.segment.tree</field>
         <field name="model">sale.order.segment</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="parent_id"/>
                 <field name="level"/>
                 <field name="child_count"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -48,11 +48,11 @@
                         </page>
                         <page string="Sub-segments" name="children">
                             <field name="child_ids">
-                                <tree>
+                                <list>
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="level"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -85,7 +85,7 @@
     <record id="sale_order_segment_action" model="ir.actions.act_window">
         <field name="name">Segments</field>
         <field name="res_model">sale.order.segment</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="sale_order_segment_view_search"/>
         <field name="context">{'search_default_root': 1}</field>
     </record>
