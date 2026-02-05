@@ -99,7 +99,21 @@ class SaleOrderSegment(models.Model):
     child_count = fields.Integer(
         string='Sub-segment Count',
         compute='_compute_child_count',
+        store=True,
         help='Number of direct child segments',
+    )
+    child_depth = fields.Integer(
+        string='Depth Levels',
+        compute='_compute_child_depth',
+        recursive=True,
+        store=True,
+        help='Maximum depth of descendant tree (0 = leaf, 1+ = has descendants)',
+    )
+    product_count = fields.Integer(
+        string='Product Count',
+        compute='_compute_product_count',
+        store=True,
+        help='Number of products directly assigned to this segment (not children)',
     )
     full_path = fields.Char(
         string='Full Path',
@@ -122,6 +136,25 @@ class SaleOrderSegment(models.Model):
     def _compute_child_count(self):
         for segment in self:
             segment.child_count = len(segment.child_ids)
+
+    @api.depends('child_ids', 'child_ids.child_depth')
+    def _compute_child_depth(self):
+        """Compute maximum depth of descendant tree.
+
+        Recursive dependency ensures bottom-up recomputation when
+        hierarchy structure changes.
+        """
+        for segment in self:
+            if not segment.child_ids:
+                segment.child_depth = 0
+            else:
+                segment.child_depth = max(segment.child_ids.mapped('child_depth')) + 1
+
+    @api.depends('line_ids')
+    def _compute_product_count(self):
+        """Count products assigned to this segment (not children)."""
+        for segment in self:
+            segment.product_count = len(segment.line_ids)
 
     @api.depends('name', 'parent_id.full_path')
     def _compute_full_path(self):
