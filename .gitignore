@@ -1,6 +1,7 @@
 # Odoo data
 odoo-data/
 postgresql/
+data4claude/
 
 # Python
 __pycache__/
