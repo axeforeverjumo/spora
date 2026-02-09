@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Report Definition -->
+    <record id="action_report_sale_order_segment" model="ir.actions.report">
+        <field name="name">Presupuesto Jerárquico</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">spora_segment.report_saleorder_document_segment</field>
+        <field name="report_file">spora_segment.report_saleorder_document_segment</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

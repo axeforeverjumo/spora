@@ -8,7 +8,9 @@
             <list decoration-primary="level == 1"
                   decoration-info="level == 2"
                   decoration-muted="level == 3"
-                  decoration-warning="level == 4">
+                  decoration-warning="level == 4"
+                  default_order="outline_number">
+                <field name="outline_number" string="Nº" width="80px"/>
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="full_path"/>

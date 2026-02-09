@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Report Template -->
+    <template id="report_saleorder_document_segment">
+        <t t-call="web.external_layout">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page">
+                    <h2>Presupuesto: <span t-field="doc.name"/></h2>
+                    <div class="row mt-4 mb-4">
+                        <div class="col-6">
+                            <strong>Cliente:</strong> <span t-field="doc.partner_id.name"/><br/>
+                            <t t-if="doc.partner_id.email">
+                                <strong>Email:</strong> <span t-field="doc.partner_id.email"/><br/>
+                            </t>
+                            <t t-if="doc.partner_id.phone">
+                                <strong>Teléfono:</strong> <span t-field="doc.partner_id.phone"/><br/>
+                            </t>
+                        </div>
+                        <div class="col-6 text-end">
+                            <strong>Fecha:</strong> <span t-field="doc.date_order" t-options='{"widget": "date"}'/><br/>
+                            <t t-if="doc.validity_date">
+                                <strong>Válido hasta:</strong> <span t-field="doc.validity_date" t-options='{"widget": "date"}'/><br/>
+                            </t>
+                            <strong>Estado:</strong> <span t-field="doc.state"/><br/>
+                        </div>
+                    </div>
+
+                    <table class="table table-sm o_report_block_table">
+                        <thead>
+                            <tr style="border-bottom: 2px solid black;">
+                                <th style="width: 8%">Nº</th>
+                                <th style="width: 47%">Descripción</th>
+                                <th class="text-end" style="width: 10%">Cant.</th>
+                                <th class="text-end" style="width: 15%">Precio Unit.</th>
+                                <th class="text-end" style="width: 20%">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Root segments ordered by outline_number -->
+                            <t t-foreach="doc.segment_ids.filtered(lambda s: not s.parent_id).sorted('outline_number')" t-as="segment">
+                                <t t-call="spora_segment.segment_line_recursive"/>
+                            </t>
+
+                            <!-- Total general -->
+                            <tr style="border-top: 2px solid black; font-weight: bold; font-size: 14pt;">
+                                <td colspan="4" class="text-end">TOTAL PRESUPUESTO:</td>
+                                <td class="text-end">
+                                    <span t-field="doc.amount_total"
+                                          t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Optional notes section -->
+                    <t t-if="doc.note">
+                        <div class="mt-4">
+                            <strong>Observaciones:</strong>
+                            <p t-field="doc.note"/>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Recursive Segment Line Template -->
+    <template id="segment_line_recursive">
+        <!-- Segment line (bold, gray background, highlighted total) -->
+        <tr style="font-weight: bold; background-color: #f5f5f5;">
+            <td style="vertical-align: top;">
+                <span t-field="segment.outline_number"/>
+            </td>
+            <td t-att-style="'padding-left: %spx; vertical-align: top;' % (segment.level * 15)">
+                <span t-field="segment.name"/>
+            </td>
+            <td></td>
+            <td></td>
+            <td class="text-end" style="vertical-align: top;">
+                <strong>
+                    <span t-field="segment.total"
+                          t-options='{"widget": "monetary", "display_currency": segment.currency_id}'/>
+                </strong>
+            </td>
+        </tr>
+
+        <!-- Products in this segment (indented with bullet) -->
+        <t t-foreach="segment.line_ids.sorted(lambda l: l.sequence)" t-as="line">
+            <tr>
+                <td></td>
+                <td t-att-style="'padding-left: %spx;' % ((segment.level + 1) * 15)">
+                    <span style="color: #666;">• </span>
+                    <span t-field="line.product_id.name"/>
+                    <t t-if="line.name != line.product_id.name">
+                        <br/>
+                        <span style="font-size: 0.9em; color: #888;">
+                            <t t-esc="line.name"/>
+                        </span>
+                    </t>
+                </td>
+                <td class="text-end">
+                    <span t-field="line.product_uom_qty"/>
+                    <span t-field="line.product_uom" groups="uom.group_uom"/>
+                </td>
+                <td class="text-end">
+                    <span t-field="line.price_unit"
+                          t-options='{"widget": "monetary", "display_currency": line.currency_id}'/>
+                </td>
+                <td class="text-end">
+                    <span t-field="line.price_subtotal"
+                          t-options='{"widget": "monetary", "display_currency": line.currency_id}'/>
+                </td>
+            </tr>
+        </t>
+
+        <!-- Recursion: process children ordered by outline_number -->
+        <t t-foreach="segment.child_ids.sorted('outline_number')" t-as="segment">
+            <t t-call="spora_segment.segment_line_recursive"/>
+        </t>
+    </template>
+</odoo>

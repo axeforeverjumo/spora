@@ -14,7 +14,7 @@ class SaleOrderSegment(models.Model):
     _parent_name = 'parent_id'
     _parent_store = True
     _rec_name = 'name'
-    _order = 'sequence, id'
+    _order = 'outline_number, sequence, id'
 
     # --- Core fields ---
     name = fields.Char(
@@ -34,6 +34,13 @@ class SaleOrderSegment(models.Model):
     active = fields.Boolean(
         string='Active',
         default=True,
+    )
+    outline_number = fields.Char(
+        string='Nº',
+        compute='_compute_outline_number',
+        store=True,
+        recursive=True,
+        help='Numeración automática tipo outline (1, 1.1, 1.2, etc.)',
     )
 
     # --- Hierarchy fields ---
@@ -129,6 +136,29 @@ class SaleOrderSegment(models.Model):
     )
 
     # --- Computed methods ---
+    @api.depends('parent_id', 'parent_id.outline_number', 'sequence', 'order_id')
+    def _compute_outline_number(self):
+        """Calcula número outline basado en jerarquía y sequence."""
+        for segment in self:
+            if not segment.parent_id:
+                # Segmento raíz: contar posición entre hermanos raíz
+                siblings = segment.order_id.segment_ids.filtered(
+                    lambda s: not s.parent_id
+                ).sorted('sequence')
+                if segment.id in siblings.ids:
+                    position = siblings.ids.index(segment.id) + 1
+                    segment.outline_number = str(position)
+                else:
+                    segment.outline_number = '0'
+            else:
+                # Hijo: padre.número + "." + posición entre hermanos
+                siblings = segment.parent_id.child_ids.sorted('sequence')
+                if segment.id in siblings.ids:
+                    position = siblings.ids.index(segment.id) + 1
+                    segment.outline_number = f"{segment.parent_id.outline_number}.{position}"
+                else:
+                    segment.outline_number = '0.0'
+
     @api.depends('parent_id', 'parent_id.level')
     def _compute_level(self):
         for segment in self:
@@ -260,9 +290,11 @@ class SaleOrderSegment(models.Model):
 
     # --- Display name ---
     def _compute_display_name(self):
-        """Display as 'SO001 / Segment Name' for better identification in task form."""
+        """Display as 'SO001 / 1.1. Segment Name' for better identification in task form."""
         for segment in self:
-            if segment.order_id:
+            if segment.outline_number and segment.order_id:
+                segment.display_name = f'{segment.order_id.name} / {segment.outline_number}. {segment.name}'
+            elif segment.order_id:
                 segment.display_name = '%s / %s' % (segment.order_id.name, segment.name)
             else:
                 segment.display_name = segment.name
