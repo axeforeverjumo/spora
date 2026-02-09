@@ -28,16 +28,55 @@ docker-compose restart odoo
 ## 📦 Módulo: spora_segment
 
 **Estado**: ✅ Instalado y configurado
+**Versión**: 1.1.0 (2026-02-09)
 
-### Características
+### Características Principales
 
+#### 🏗️ Estructura Jerárquica
 - ✅ **Segmentos jerárquicos**: Hasta 4 niveles de profundidad
 - ✅ **Integración con presupuestos**: Organiza líneas de venta en segmentos
-- ✅ **Creación automática de tareas**: Al confirmar presupuesto
 - ✅ **Cálculo de totales**: Subtotales y totales recursivos
-- ✅ **UX mejorado**: Full path, depth, product count
-- ✅ **Seguridad**: Reglas para Sales User/Manager
+- ✅ **Vista jerárquica visual**: Smart button "Vista Jerárquica" con badge de conteo
+
+#### 🤖 Creación Automática de Tareas
+- ✅ **Tareas por segmento**: Un task por cada segmento (jerárquico)
+- ✅ **Tareas por producto**: Un task individual por cada producto (NEW v1.1.0)
+  - Horas asignadas desde cantidad de producto
+  - Descripción incluida en task
+  - Vinculado a sale.order.line
+- ✅ **Algoritmo DFS recursivo**: Procesamiento en profundidad
+- ✅ **Idempotencia**: Detecta y omite tareas duplicadas
+- ✅ **Isolation por savepoint**: Previene fallos en cascada
+
+#### 🎨 UX Mejorado
+- ✅ **Full path**: Navegación breadcrumb (ej. "Root / Child / Grandchild")
+- ✅ **Indicadores de nivel**: Decoraciones visuales (primario/info/muted/warning)
+- ✅ **Product count badge**: Muestra cantidad de productos en segmento
+- ✅ **Products Detail column**: Vista previa de productos con cantidades (NEW v1.1.0)
+- ✅ **Smart buttons**:
+  - Segmentos en presupuesto
+  - Sub-segmentos en formulario de segmento
+  - Profundidad del árbol (child_depth)
+
+#### 🔒 Seguridad
+- ✅ **Reglas de acceso**: Sales User (lectura) / Sales Manager (CRUD)
+- ✅ **Record rules**: Aislamiento por orden de venta
+- ✅ **Constraints**:
+  - C1: Segmento debe pertenecer a misma orden
+  - C2: Profundidad máxima (4 niveles)
+  - C3: Relación task-segment-order consistente
+
+#### 🧪 Calidad de Código
 - ✅ **98 tests**: Suite completa pasando
+- ✅ **2123 líneas de código de tests**: Cobertura exhaustiva
+- ✅ **28 productos de ejemplo**: Datos demo para validación completa
+
+### Novedades v1.1.0 (2026-02-09)
+
+- **Productos como tareas individuales**: Cada producto ahora genera su propio task (antes era texto en descripción)
+- **Vista jerárquica mejorada**: Botón "Vista Jerárquica" con acceso directo
+- **Columna Products Detail**: Muestra productos inline en vista de lista
+- **Algoritmo optimizado**: DFS recursivo reemplaza BFS iterativo
 
 ## Estructura
 

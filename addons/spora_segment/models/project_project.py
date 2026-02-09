@@ -5,6 +5,33 @@ from odoo.exceptions import ValidationError
 class ProjectProject(models.Model):
     _inherit = 'project.project'
 
+    def action_view_tasks(self):
+        """Override to show only root tasks by default.
+
+        When opening the tasks view from a project, filter to show only
+        parent-level tasks (parent_id = False). This prevents overwhelming
+        users with all subtasks in projects with deep hierarchies.
+
+        Users can still:
+        - Expand task rows to see subtasks (tree view expansion)
+        - Remove the filter manually to see all tasks
+        - Access subtasks through parent task form view
+
+        Technical context:
+        - Standard Odoo shows ALL tasks in a project (root + subtasks)
+        - For projects with segment-based hierarchies, this can be 30+ tasks
+        - This override adds domain filter to show only root tasks initially
+        """
+        result = super().action_view_tasks()
+
+        # Add domain filter to show only root tasks
+        if 'domain' in result:
+            result['domain'] += [('parent_id', '=', False)]
+        else:
+            result['domain'] = [('parent_id', '=', False)]
+
+        return result
+
     def write(self, vals):
         """Override write to prevent sale_order changes when tasks have segments.
 
