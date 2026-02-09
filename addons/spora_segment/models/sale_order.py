@@ -38,16 +38,114 @@ class SaleOrder(models.Model):
         }
 
     def action_confirm(self):
-        """Override to create hierarchical tasks from segments after native flow creates project."""
-        # FIRST: Native Odoo flow - creates project, handles service products
-        res = super().action_confirm()
+        """Override to create hierarchical tasks from segments.
 
-        # THEN: Create segment tasks (project now guaranteed to exist)
-        for order in self:
-            if order.segment_ids:
-                order._create_segment_tasks()
+        CRITICAL: For orders with segments, disables native Odoo service_tracking task creation:
+        - Prevents duplicate tasks (Odoo native + our segment tasks)
+        - Prevents broken hierarchy (native tasks created as root instead of under segments)
+        - Manually creates project if needed (since service_tracking='no' prevents project creation)
+
+        Flow for orders WITH segments:
+        1. Temporarily set service_tracking='no' on service products
+        2. Call super() to handle order confirmation logic
+        3. Manually create project if not exists
+        4. Create hierarchical segment+product tasks
+        5. Restore original service_tracking
+
+        Flow for orders WITHOUT segments:
+        - Normal Odoo flow (no changes)
+        """
+        # Identify orders with segments that need special handling
+        orders_with_segments = self.filtered(lambda o: o.segment_ids)
+        orders_without_segments = self - orders_with_segments
+
+        # Store original service_tracking values for orders with segments
+        tracking_backup = {}
+        for order in orders_with_segments:
+            for line in order.order_line:
+                if line.product_id.type == 'service' and hasattr(line.product_id, 'service_tracking'):
+                    tracking_backup[line.product_id.id] = line.product_id.service_tracking
+                    # Temporarily disable to prevent native task creation
+                    line.product_id.service_tracking = 'no'
+
+        try:
+            # Native Odoo confirmation flow
+            res = super().action_confirm()
+
+            # For orders with segments: create project + segment tasks
+            for order in orders_with_segments:
+                _logger.info(
+                    'Processing order %s with %d segments',
+                    order.name,
+                    len(order.segment_ids)
+                )
+
+                # Create project if needed (native flow didn't create it due to tracking='no')
+                project = order._ensure_project_exists()
+
+                if project:
+                    _logger.info(
+                        'Project %s found/created for order %s, creating segment tasks',
+                        project.name,
+                        order.name
+                    )
+                    # Create hierarchical segment + product tasks
+                    order._create_segment_tasks()
+                else:
+                    _logger.warning(
+                        'Could not create or find project for order %s. Skipping segment tasks.',
+                        order.name
+                    )
+
+            # Restore original service_tracking
+            for product_id, original_tracking in tracking_backup.items():
+                product = self.env['product.product'].browse(product_id)
+                if product.exists():
+                    product.service_tracking = original_tracking
+
+        except Exception as e:
+            # Restore tracking even on error
+            for product_id, original_tracking in tracking_backup.items():
+                product = self.env['product.product'].browse(product_id)
+                if product.exists():
+                    product.service_tracking = original_tracking
+            raise
 
         return res
+
+    def _ensure_project_exists(self):
+        """Ensure project exists for this order. Create if needed.
+
+        Returns:
+            project.project: existing or newly created project
+        """
+        self.ensure_one()
+
+        # Check if project already exists
+        project = self._get_project()
+        if project:
+            return project
+
+        # Get first service line to link
+        service_line = self.order_line.filtered(
+            lambda l: l.product_id.type == 'service'
+        )[:1]
+
+        # Create project for this order
+        project = self.env['project.project'].create({
+            'name': self.name,
+            'partner_id': self.partner_id.id,
+            'company_id': self.company_id.id,
+            'sale_line_id': service_line.id if service_line else False,
+        })
+
+        _logger.info(
+            'Created project %s for order %s (order has segments, manual creation needed)',
+            project.name,
+            self.name
+        )
+
+        return project
 
     def _get_project(self):
         """Get project for this sale order. Called after super().action_confirm() so project exists."""
@@ -75,8 +173,21 @@ class SaleOrder(models.Model):
 
         Uses savepoint isolation for each task creation to prevent cascading failures.
         Idempotent: checks for existing tasks before creating.
+
+        Prevention mechanisms:
+        - Checks if tasks already exist before creation
+        - Uses context flag to prevent concurrent execution
+        - Validates project state before processing
         """
         self.ensure_one()
+
+        # Prevent concurrent/duplicate execution
+        if self.env.context.get('_creating_segment_tasks'):
+            _logger.debug(
+                'Skipping _create_segment_tasks for %s - already in progress',
+                self.name
+            )
+            return
 
         # Get project created by super().action_confirm()
         project = self._get_project()
@@ -98,16 +209,31 @@ class SaleOrder(models.Model):
             )
             return
 
+        # Check if segment tasks already created
+        existing_segment_tasks = self.env['project.task'].search([
+            ('segment_id', 'in', self.segment_ids.ids),
+            ('project_id', '=', project.id)
+        ])
+        if len(existing_segment_tasks) >= len(self.segment_ids):
+            _logger.info(
+                'Segment tasks already created for order %s (%d tasks). Skipping.',
+                self.name,
+                len(existing_segment_tasks)
+            )
+            return
+
         _logger.info(
             'Creating tasks for segments in order %s (project: %s)',
             self.name,
             project.name
         )
 
-        # Process root segments (level 1) recursively
+        # Process root segments (level 1) recursively with context flag
         root_segments = self.segment_ids.filtered(lambda s: not s.parent_id)
         for segment in root_segments.sorted(key=lambda s: (s.sequence, s.id)):
-            self._create_segment_tasks_recursive(segment, project, parent_task=None)
+            self.with_context(_creating_segment_tasks=True)._create_segment_tasks_recursive(
+                segment, project, parent_task=None
+            )
 
         _logger.info(
             'Successfully created segment and product tasks for order %s',
@@ -237,3 +363,60 @@ class SaleOrder(models.Model):
                 exc_info=True
             )
             return None
+
+    def check_task_creation_conflicts(self):
+        """Check for modules/configurations that may conflict with segment task creation.
+
+        Returns:
+            dict: {
+                'has_conflicts': bool,
+                'conflicts': list of dict with details,
+                'warnings': list of warning messages,
+            }
+        """
+        conflicts = []
+        warnings = []
+
+        # Check for conflicting modules
+        conflicting_modules = [
+            'sale_project_task_custom',
+            'jumo_spora_project_task_from_sale',
+            'project_task_auto_create',
+        ]
+
+        installed_modules = self.env['ir.module.module'].search([
+            ('name', 'in', conflicting_modules),
+            ('state', '=', 'installed')
+        ])
+
+        if installed_modules:
+            for module in installed_modules:
+                conflicts.append({
+                    'type': 'module',
+                    'name': module.name,
+                    'summary': module.summary,
+                    'message': f'Module "{module.name}" may create tasks independently',
+                })
+
+        # Check for products with service_tracking enabled
+        products_with_tracking = self.env['product.product'].search([
+            ('type', '=', 'service'),
+            ('sale_ok', '=', True),
+            ('service_tracking', '!=', 'no'),
+        ])
+
+        if products_with_tracking:
+            warnings.append({
+                'type': 'product_tracking',
+                'count': len(products_with_tracking),
+                'message': f'{len(products_with_tracking)} service products have service_tracking enabled. '
+                           f'This is normal - our module temporarily disables it during confirmation.',
+                'sample_products': products_with_tracking[:5].mapped('name'),
+            })
+
+        return {
+            'has_conflicts': bool(conflicts),
+            'has_warnings': bool(warnings),
+            'conflicts': conflicts,
+            'warnings': warnings,
+        }
