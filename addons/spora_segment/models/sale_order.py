@@ -66,11 +66,15 @@ class SaleOrder(models.Model):
         return project
 
     def _create_segment_tasks(self):
-        """Create hierarchical project tasks from segments level-by-level.
+        """Create hierarchical project tasks from segments and products.
 
-        Process segments level-by-level (BFS) to ensure parent tasks exist before children.
+        Process segments recursively:
+        1. Create segment task
+        2. Create product subtasks (one per line_ids)
+        3. Recursively process child segments
+
         Uses savepoint isolation for each task creation to prevent cascading failures.
-        Idempotent: checks for existing tasks with same segment_id before creating.
+        Idempotent: checks for existing tasks before creating.
         """
         self.ensure_one()
 
@@ -94,111 +98,114 @@ class SaleOrder(models.Model):
             )
             return
 
-        # Map segment.id -> task.id for parent_id resolution
-        segment_to_task = {}
-
-        # Get all segments ordered by level (BFS: process level 1, then 2, then 3, then 4)
-        all_segments = self.segment_ids.sorted(key=lambda s: (s.level, s.sequence, s.id))
-
         _logger.info(
-            'Creating tasks for %d segments in order %s (project: %s)',
-            len(all_segments),
+            'Creating tasks for segments in order %s (project: %s)',
             self.name,
             project.name
         )
 
-        for segment in all_segments:
-            # Idempotence check: skip if task already exists for this segment
-            existing_task = self.env['project.task'].search([
-                ('segment_id', '=', segment.id),
-                ('project_id', '=', project.id)
-            ], limit=1)
-
-            if existing_task:
-                _logger.debug(
-                    'Task already exists for segment %s (task: %s), skipping creation',
-                    segment.name,
-                    existing_task.name
-                )
-                segment_to_task[segment.id] = existing_task.id
-                continue
-
-            # Prepare task values
-            task_values = self._prepare_task_values(segment, project, segment_to_task)
-
-            # Create task with savepoint isolation
-            task = self._create_task_with_savepoint(task_values, segment)
-            if task:
-                segment_to_task[segment.id] = task.id
+        # Process root segments (level 1) recursively
+        root_segments = self.segment_ids.filtered(lambda s: not s.parent_id)
+        for segment in root_segments.sorted(key=lambda s: (s.sequence, s.id)):
+            self._create_segment_tasks_recursive(segment, project, parent_task=None)
 
         _logger.info(
-            'Successfully created %d tasks for order %s',
-            len(segment_to_task),
+            'Successfully created segment and product tasks for order %s',
             self.name
         )
 
-    def _prepare_task_values(self, segment, project, segment_to_task):
-        """Build task creation dict with segment data.
+    def _create_segment_tasks_recursive(self, segment, project, parent_task=None):
+        """Recursively create tasks for segment, its products, and child segments.
 
         Args:
             segment: sale.order.segment record
             project: project.project record
-            segment_to_task: dict mapping segment.id -> task.id for parent resolution
+            parent_task: project.task record (parent task) or None for root
 
         Returns:
-            dict: values for project.task.create()
+            project.task: created segment task or existing task
         """
-        values = {
-            'name': segment.name,
-            'project_id': project.id,
-            'segment_id': segment.id,
-            'description': self._format_products_description(segment),
-            'allocated_hours': sum(segment.line_ids.mapped('product_uom_qty')),
-            'partner_id': self.partner_id.id,
-            'company_id': self.company_id.id,
-            'sequence': segment.sequence,
-        }
+        # 1. Create or get segment task
+        existing_task = self.env['project.task'].search([
+            ('segment_id', '=', segment.id),
+            ('project_id', '=', project.id)
+        ], limit=1)
 
-        # Set parent_id if segment has parent and parent's task exists
-        if segment.parent_id and segment.parent_id.id in segment_to_task:
-            values['parent_id'] = segment_to_task[segment.parent_id.id]
-
-        return values
-
-    def _format_products_description(self, segment):
-        """Format product list as task description.
-
-        Args:
-            segment: sale.order.segment record
-
-        Returns:
-            str: formatted product description with quantities
-        """
-        if not segment.line_ids:
-            return ''
-
-        lines = ['Productos incluidos:']
-        for line in segment.line_ids:
-            # Format: • Product Name (qty.00 unit)
-            lines.append(
-                '• %s (%.2f %s)' % (
-                    line.product_id.name,
-                    line.product_uom_qty,
-                    line.product_uom.name
-                )
+        if existing_task:
+            _logger.debug(
+                'Task already exists for segment %s (task: %s), skipping creation',
+                segment.name,
+                existing_task.name
             )
+            segment_task = existing_task
+        else:
+            # Prepare segment task values
+            task_values = {
+                'name': segment.name,
+                'project_id': project.id,
+                'segment_id': segment.id,
+                'partner_id': self.partner_id.id,
+                'company_id': self.company_id.id,
+                'sequence': segment.sequence,
+            }
+
+            # Set parent if this is a child segment
+            if parent_task:
+                task_values['parent_id'] = parent_task.id
+
+            # Create segment task
+            segment_task = self._create_task_with_savepoint(task_values, segment)
+            if not segment_task:
+                return None
+
+        # 2. Create product subtasks (one per line_ids)
+        for line in segment.line_ids:
+            # Check if product task already exists
+            existing_product_task = self.env['project.task'].search([
+                ('name', '=', line.product_id.name),
+                ('parent_id', '=', segment_task.id),
+                ('project_id', '=', project.id),
+                ('sale_line_id', '=', line.id)
+            ], limit=1)
+
+            if existing_product_task:
+                _logger.debug(
+                    'Product task already exists for line %s, skipping',
+                    line.product_id.name
+                )
+                continue
+
+            # Prepare product task values
+            product_task_values = {
+                'name': line.product_id.name,
+                'project_id': project.id,
+                'parent_id': segment_task.id,
+                'sale_line_id': line.id,
+                'allocated_hours': line.product_uom_qty,
+                'partner_id': self.partner_id.id,
+                'company_id': self.company_id.id,
+            }
+
             # Add product description if exists
-            if line.product_id.description_sale:
-                lines.append('  %s' % line.product_id.description_sale)
+            if line.name or line.product_id.description_sale:
+                product_task_values['description'] = line.name or line.product_id.description_sale
 
-        return '\n'.join(lines)
+            # Create product task
+            self._create_task_with_savepoint(product_task_values, segment, is_product=True)
 
-    def _create_task_with_savepoint(self, task_values, segment):
+        # 3. Recursively process child segments
+        for child_segment in segment.child_ids.sorted(key=lambda s: (s.sequence, s.id)):
+            self._create_segment_tasks_recursive(child_segment, project, parent_task=segment_task)
+
+        return segment_task
+
+    def _create_task_with_savepoint(self, task_values, segment, is_product=False):
         """Create task with savepoint isolation to prevent cascading failures.
 
         Args:
             task_values: dict for project.task.create()
-            segment: sale.order.segment record (for logging)
+            segment: sale.order.segment record (for logging context)
+            is_product: bool, True if creating product task (for logging)
 
         Returns:
             project.task: created task or None if failed
@@ -206,16 +213,25 @@ class SaleOrder(models.Model):
         try:
             with self.env.cr.savepoint():
                 task = self.env['project.task'].create(task_values)
-                _logger.info(
-                    'Created task "%s" for segment "%s" (level %d)',
-                    task.name,
-                    segment.name,
-                    segment.level
-                )
+                if is_product:
+                    _logger.info(
+                        'Created product task "%s" under segment "%s"',
+                        task.name,
+                        segment.name
+                    )
+                else:
+                    _logger.info(
+                        'Created segment task "%s" (level %d)',
+                        task.name,
+                        segment.level
+                    )
                 return task
         except Exception as e:
+            task_type = 'product' if is_product else 'segment'
             _logger.error(
-                'Failed to create task for segment "%s": %s',
+                'Failed to create %s task "%s" for segment "%s": %s',
+                task_type,
+                task_values.get('name', 'unknown'),
                 segment.name,
                 str(e),
                 exc_info=True
