@@ -17,4 +17,19 @@
         </field>
     </record>
 
+    <!-- Inherit project task search view to add root_tasks_only filter -->
+    <record id="project_task_search_inherit_root_filter" model="ir.ui.view">
+        <field name="name">project.task.search.inherit.root.filter</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='my_tasks']" position="after">
+                <filter string="Root Tasks Only"
+                        name="root_tasks_only"
+                        domain="[('parent_id', '=', False)]"
+                        help="Show only parent-level tasks (hide subtasks)"/>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>

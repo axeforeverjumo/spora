@@ -20,15 +20,17 @@ class ProjectProject(models.Model):
         Technical context:
         - Standard Odoo shows ALL tasks in a project (root + subtasks)
         - For projects with segment-based hierarchies, this can be 30+ tasks
-        - This override adds domain filter to show only root tasks initially
+        - This override adds context to activate a search filter for root tasks
         """
         result = super().action_view_tasks()
 
-        # Add domain filter to show only root tasks
-        if 'domain' in result:
-            result['domain'] += [('parent_id', '=', False)]
-        else:
-            result['domain'] = [('parent_id', '=', False)]
+        # Add context to activate "root_tasks_only" filter by default
+        # This filter is defined in project_task_views.xml
+        if 'context' not in result:
+            result['context'] = {}
+
+        # Activate the root tasks filter
+        result['context']['search_default_root_tasks_only'] = 1
 
         return result
 
