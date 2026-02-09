@@ -14,7 +14,7 @@
                         class="oe_stat_button"
                         icon="fa-sitemap"
                         invisible="segment_count == 0">
-                    <field name="segment_count" widget="statinfo" string="Segments"/>
+                    <field name="segment_count" widget="statinfo" string="Vista Jerárquica"/>
                 </button>
             </xpath>
 

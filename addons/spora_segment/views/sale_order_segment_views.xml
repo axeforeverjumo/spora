@@ -12,8 +12,9 @@
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="full_path"/>
+                <field name="product_list_preview" string="Products Detail"/>
                 <field name="child_count"/>
-                <field name="product_count" string="Products"/>
+                <field name="product_count" string="Qty"/>
                 <field name="subtotal" sum="Subtotal"/>
                 <field name="total" sum="Total"/>
                 <field name="level" column_invisible="1"/>

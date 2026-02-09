@@ -122,6 +122,11 @@ class SaleOrderSegment(models.Model):
         store=True,
         help='Full hierarchical path: "Root / Parent / This Segment"',
     )
+    product_list_preview = fields.Char(
+        string='Products',
+        compute='_compute_product_list_preview',
+        help='Preview of products assigned to this segment',
+    )
 
     # --- Computed methods ---
     @api.depends('parent_id', 'parent_id.level')
@@ -177,6 +182,23 @@ class SaleOrderSegment(models.Model):
         for segment in self:
             children_total = sum(segment.child_ids.mapped('total'))
             segment.total = segment.subtotal + children_total
+
+    @api.depends('line_ids.product_id')
+    def _compute_product_list_preview(self):
+        """Generate preview list of product names for display in tree view."""
+        for segment in self:
+            if not segment.line_ids:
+                segment.product_list_preview = ''
+            else:
+                product_names = segment.line_ids.mapped('product_id.name')
+                if len(product_names) <= 3:
+                    segment.product_list_preview = ', '.join(product_names)
+                else:
+                    # Show first 3 products + count
+                    preview = ', '.join(product_names[:3])
+                    segment.product_list_preview = '%s... (+%d more)' % (
+                        preview, len(product_names) - 3
+                    )
 
     # --- Constraints ---
     @api.constrains('parent_id', 'order_id')
