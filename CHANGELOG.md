@@ -5,6 +5,71 @@ All notable changes to the Spora project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-09
+
+### Added
+
+#### Outline Numbering System
+- **Automatic outline numbering** for segments (1, 1.1, 1.2, 2, 2.1, etc.)
+  - New computed field `outline_number` (stored, recursive)
+  - Updates automatically when reordering or moving segments
+  - Visible in all views (tree, form, select)
+  - Display name enhanced: "S00001 / 1.1. Diseño"
+  - Differentiates segments with same name under different parents
+
+#### Hierarchical Print Report
+- **Professional PDF report** with visual hierarchy
+  - QWeb template with recursive structure
+  - Table with indentation proportional to level
+  - Segment totals highlighted in bold with gray background
+  - Products with bullet points (•)
+  - Supports up to 4 hierarchy levels
+  - Grand total at bottom with separator line
+  - New report action: "Presupuesto Jerárquico"
+
+#### Testing
+- **8 new test methods** for outline numbering
+  - Root segment numbering (1, 2, 3)
+  - Nested hierarchy (1.1, 1.2)
+  - Automatic recalculation on reorder
+  - Three-level hierarchy (1.1.1, 1.1.2)
+  - Multiple independent trees
+  - Display name with number
+  - Correct ordering by outline_number
+
+### Changed
+
+#### Model Improvements
+- **Default ordering**: Changed to `outline_number, sequence, id`
+  - Ensures consistent hierarchy display
+  - Segments always appear in logical order
+
+#### View Enhancements
+- **Tree view updated**: "Nº" column as first column (80px width)
+  - Always visible for quick reference
+  - Default order by outline_number
+  - Professional appearance
+
+### Technical
+
+#### Files Created
+- `report/sale_order_segment_report.xml` - Report definition
+- `report/sale_order_segment_template.xml` - QWeb templates
+- `tests/test_outline_numbering.py` - Test suite (8 tests)
+- `docs/plans/2025-02-09-segment-outline-numbering-design.md` - Technical design
+
+#### Files Modified
+- `models/sale_order_segment.py` - Added outline_number field and compute method
+- `views/sale_order_segment_views.xml` - Updated tree view
+- `__manifest__.py` - Version bump to 18.0.1.2.0, added report files
+- `README.md` - Updated with v1.2.0 features
+
+#### Benefits
+- **Better organization**: Clear numbering system for complex hierarchies
+- **Professional documents**: Client-ready PDF quotations
+- **Easy navigation**: Quick identification of segment position
+- **Reduced confusion**: Unique identifiers even for duplicate names
+
 ## [1.1.0] - 2026-02-09
 
 ### Added

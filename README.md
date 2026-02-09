@@ -28,7 +28,7 @@ docker-compose restart odoo
 ## 📦 Módulo: spora_segment
 
 **Estado**: ✅ Instalado y configurado
-**Versión**: 1.1.0 (2026-02-09)
+**Versión**: 1.2.0 (2026-02-09)
 
 ### Características Principales
 
@@ -49,6 +49,10 @@ docker-compose restart odoo
 - ✅ **Isolation por savepoint**: Previene fallos en cascada
 
 #### 🎨 UX Mejorado
+- ✅ **Numeración outline automática**: Sistema de numeración jerárquica (1, 1.1, 1.2, etc.) (NEW v1.2.0)
+  - Visible en todas las vistas (columna "Nº")
+  - Diferencia segmentos con mismo nombre en padres distintos
+  - Actualización automática al reordenar
 - ✅ **Full path**: Navegación breadcrumb (ej. "Root / Child / Grandchild")
 - ✅ **Indicadores de nivel**: Decoraciones visuales (primario/info/muted/warning)
 - ✅ **Product count badge**: Muestra cantidad de productos en segmento
@@ -67,9 +71,25 @@ docker-compose restart odoo
   - C3: Relación task-segment-order consistente
 
 #### 🧪 Calidad de Código
-- ✅ **98 tests**: Suite completa pasando
+- ✅ **106 tests**: Suite completa pasando (+8 tests en v1.2.0)
 - ✅ **2123 líneas de código de tests**: Cobertura exhaustiva
 - ✅ **28 productos de ejemplo**: Datos demo para validación completa
+
+#### 📄 Reportes (NEW v1.2.0)
+- ✅ **Presupuesto Jerárquico PDF**: Impresión profesional con jerarquía visual
+  - Tabla con indentación proporcional al nivel
+  - Totales de segmentos destacados en negrita
+  - Productos con bullet points (•)
+  - Total general al final
+  - Soporta hasta 4 niveles de jerarquía
+
+### Novedades v1.2.0 (2026-02-09)
+
+- **Numeración outline automática**: Sistema 1, 1.1, 1.2, 2, 2.1, etc. visible en todas las vistas
+- **Reporte PDF jerárquico**: Impresión profesional con indentación y totales destacados
+- **Ordenamiento automático**: Por número outline para navegación lógica
+- **8 nuevos tests**: Validación completa del sistema de numeración
+- **Display name mejorado**: "S00001 / 1.1. Diseño" en selects y referencias
 
 ### Novedades v1.1.0 (2026-02-09)
 

@@ -95,6 +95,7 @@ docker compose exec odoo python3 /usr/bin/odoo --test-enable --stop-after-init -
 - `test_automated_task_creation.py`: Creación automática de tareas
 - `test_ux_enhancements.py`: Validaciones UX
 - `test_project_task_filtering.py`: Filtrado de tareas raíz
+- `test_outline_numbering.py`: Numeración automática outline (8 tests)
 
 ## Troubleshooting
 
@@ -108,6 +109,25 @@ docker compose exec odoo python3 /usr/bin/odoo --test-enable --stop-after-init -
 - Revisar contexto del action en logs
 
 ## Changelog
+
+### v1.2.0 (2025-02-09)
+- **Añadido**: Numeración automática tipo outline (1, 1.1, 1.2, etc.)
+- **Añadido**: Reporte de impresión jerárquico profesional
+- **Mejora**: Display name incluye número outline para mejor identificación
+- **Mejora**: Vista tree muestra columna "Nº" con numeración
+- **Mejora**: Ordenamiento automático por outline_number
+- **Tests**: 8 nuevos tests para numeración outline
+- **Reporte**: Template recursivo con indentación visual
+- **Reporte**: Totales destacados en negrita
+- **Reporte**: Productos con bullet points
+
+#### Características del Reporte
+- Cabecera con datos del cliente y fecha
+- Tabla profesional con columnas: Nº, Descripción, Cant., Precio Unit., Total
+- Segmentos en negrita con fondo gris (#f5f5f5)
+- Indentación proporcional al nivel de jerarquía
+- Recursión automática hasta 4 niveles
+- Total general al final
 
 ### v1.1.0 (2025-02-09)
 - Agregado: Filtrado automático de tareas raíz por defecto
