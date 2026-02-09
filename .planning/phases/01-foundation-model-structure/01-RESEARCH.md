@@ -8,11 +8,11 @@
 
 Phase 1 creates the foundational `sale.order.segment` model with hierarchical parent-child relationships, automatic level computation, circular reference prevention, and a 4-level depth limit. This phase also scaffolds the Odoo module structure, defines minimal security (ir.model.access.csv), and establishes the testing framework.
 
-The standard approach uses Odoo's native hierarchical model pattern: a `parent_id` Many2one self-reference with `_parent_store = True` for performance, a `parent_path` Char field for indexed hierarchy queries, and `_check_recursion()` for circular reference validation. The level field is computed from `parent_path` (counting separators), and the 4-level depth limit is enforced via `@api.constrains`. The `product.category` model in Odoo core is the canonical reference implementation for this pattern.
+The standard approach uses Odoo's native hierarchical model pattern: a `parent_id` Many2one self-reference with `_parent_store = True` for performance, a `parent_path` Char field for indexed hierarchy queries, and `_has_cycle()` for circular reference validation (Odoo 18 standard). The level field is computed from `parent_id.level` with `recursive=True` (not `parent_path`) to avoid timing issues with constraints. The 4-level depth limit is enforced via `@api.constrains` that walks both up (parent chain) and down (descendant tree). The `product.category` model in Odoo core is the canonical reference implementation for this pattern.
 
-Key recommendations: (1) Enable `_parent_store = True` from the start -- retrofitting requires data migration. (2) Use `parent_path` to compute level efficiently (count slashes) instead of recursive parent traversal. (3) Use `@api.constrains('parent_id')` to validate both circular references and depth limit in a single constraint method. (4) Include `sequence` field from the start for sibling ordering. (5) Set up `ir.model.access.csv` before testing views to prevent access errors.
+Key recommendations: (1) Enable `_parent_store = True` from the start -- retrofitting requires data migration. (2) Use `parent_id.level` with `recursive=True` for level computation (NOT `parent_path` - timing issue). (3) Use `@api.constrains('parent_id')` to validate circular references (_has_cycle()) and depth limit in a single method. (4) Validate entire subtree depth when reparenting, not just the segment being moved. (5) Include `sequence` field from the start for sibling ordering. (6) Set up `ir.model.access.csv` before testing views to prevent access errors.
 
-**Primary recommendation:** Follow the `product.category` pattern exactly -- it is the most battle-tested hierarchical model in Odoo and provides the template for parent_id, parent_path, _parent_store, complete_name, and _check_recursion.
+**Primary recommendation:** Follow the `product.category` pattern exactly -- it is the most battle-tested hierarchical model in Odoo and provides the template for parent_id, parent_path, _parent_store, complete_name, and _has_cycle() (Odoo 18).
 
 ## Standard Stack
 
@@ -115,17 +115,39 @@ class SaleOrderSegment(models.Model):
 
     @api.constrains('parent_id')
     def _check_hierarchy(self):
-        if not self._check_recursion():
+        # IMPORTANT: Use _has_cycle() (Odoo 18), not deprecated _check_recursion()
+        # Semantics: _has_cycle() returns True if cycle exists
+        if self._has_cycle():
             raise ValidationError(
                 'Error: You cannot create recursive segments. '
                 'A segment cannot be its own ancestor.'
             )
         for segment in self:
-            if segment.level > 4:
+            # Walk UP to count depth
+            depth = 1
+            current = segment
+            while current.parent_id:
+                depth += 1
+                current = current.parent_id
+                if depth > 4:
+                    raise ValidationError(
+                        'Error: Maximum hierarchy depth is 4 levels. '
+                        'Segment "%s" would exceed this limit.' % segment.name
+                    )
+            # Walk DOWN to check subtree depth (prevents reparenting violations)
+            max_child_depth = self._get_max_descendant_depth(segment)
+            if depth + max_child_depth > 4:
                 raise ValidationError(
-                    'Error: Maximum hierarchy depth is 4 levels. '
-                    'Segment "%s" would be at level %d.' % (segment.name, segment.level)
+                    'Error: Moving "%s" here would create %d levels (max 4).'
+                    % (segment.name, depth + max_child_depth)
                 )
+
+    def _get_max_descendant_depth(self, segment):
+        """Return maximum depth of descendants below this segment."""
+        if not segment.child_ids:
+            return 0
+        return 1 + max(self._get_max_descendant_depth(child)
+                       for child in segment.child_ids)
 ```
 
 ### Pattern 2: Level Computation via parent_path (alternative -- more efficient)
@@ -149,34 +171,59 @@ def _compute_level(self):
 
 **Trade-off analysis:** The recursive `parent_id.level` approach (Pattern 1) is conceptually cleaner and leverages Odoo's recursive recomputation. The `parent_path` approach (Pattern 2) is more efficient for reads but `parent_path` is populated AFTER `@api.constrains` runs, creating a chicken-and-egg problem for depth validation. **Recommendation: Use Pattern 1** (recursive parent_id.level) because it guarantees the level is correct at constraint validation time.
 
-### Pattern 3: Constraint combining circular reference + depth limit
-**What:** Single `@api.constrains('parent_id')` method that validates both circular references and depth limits.
-**When to use:** When both validations trigger on the same field change.
+### Pattern 3: Constraint combining circular reference + depth limit + subtree validation
+**What:** Single `@api.constrains('parent_id')` method that validates circular references, depth limits, and subtree depth.
+**When to use:** When validations trigger on the same field change and need to prevent reparenting violations.
 **Example:**
 ```python
+MAX_HIERARCHY_DEPTH = 4
+
 @api.constrains('parent_id')
 def _check_hierarchy(self):
-    # Step 1: Check circular references (built-in Odoo method)
-    if not self._check_recursion():
+    # Step 1: Check circular references (Odoo 18 built-in method)
+    # IMPORTANT: Use _has_cycle() not _check_recursion() (deprecated)
+    if self._has_cycle():
         raise ValidationError(
             'Error: You cannot create recursive segments.'
         )
-    # Step 2: Check depth limit
+    # Step 2: Check depth limit for each segment
     for segment in self:
-        # Walk up the hierarchy to count depth
+        # Walk UP to count depth of this segment
         depth = 1
         current = segment
         while current.parent_id:
             depth += 1
             current = current.parent_id
-            if depth > 4:
+            if depth > MAX_HIERARCHY_DEPTH:
                 raise ValidationError(
-                    'Error: Maximum hierarchy depth is 4 levels. '
-                    'Segment "%s" exceeds this limit.' % segment.name
+                    'Error: Maximum hierarchy depth is %d levels. '
+                    'Segment "%s" exceeds this limit.'
+                    % (MAX_HIERARCHY_DEPTH, segment.name)
                 )
+        # Walk DOWN to check maximum depth of subtree
+        # This prevents moving a deep subtree under a high-level parent
+        max_child_depth = self._get_max_descendant_depth(segment)
+        if depth + max_child_depth > MAX_HIERARCHY_DEPTH:
+            raise ValidationError(
+                'Error: Moving "%s" here would create hierarchy '
+                'of %d levels (max %d).' % (
+                    segment.name,
+                    depth + max_child_depth,
+                    MAX_HIERARCHY_DEPTH,
+                )
+            )
+
+def _get_max_descendant_depth(self, segment):
+    """Return maximum depth of descendants below this segment."""
+    if not segment.child_ids:
+        return 0
+    return 1 + max(self._get_max_descendant_depth(child)
+                   for child in segment.child_ids)
 ```
 
-**Why walk the parent chain in the constraint:** At constraint evaluation time, the `parent_path` field may not yet be recomputed (it updates after the constraint). Walking the `parent_id` chain guarantees an accurate depth count regardless of parent_path timing.
+**Why walk the parent chain:** At constraint evaluation time, the `parent_path` field may not yet be recomputed (it updates after the constraint). Walking the `parent_id` chain guarantees an accurate depth count regardless of parent_path timing.
+
+**Why check subtree depth:** When reparenting a segment with children, only the moved segment triggers the constraint (children's parent_id doesn't change). Without subtree validation, you could create hierarchies exceeding the depth limit.
 
 ### Pattern 4: TransactionCase test structure
 **What:** Unit tests validating model behavior, constraints, and computed fields.
@@ -236,6 +283,8 @@ class TestSaleOrderSegment(TransactionCase):
 ```
 
 ### Anti-Patterns to Avoid
+- **Using `_check_recursion()` in Odoo 18:** Deprecated. Use `_has_cycle()` with inverted semantics (returns True if cycle exists).
+- **Not validating subtree depth on reparenting:** Only checking the moved segment's depth allows deep subtrees to exceed limits. Must walk descendants too.
 - **Using raw SQL for hierarchy queries:** Bypass the ORM and you lose constraint validation, computed field triggers, and access control. Always use `self.env['model'].search()` with `child_of`/`parent_of` operators.
 - **Computing level without `recursive=True`:** If the `level` field depends on `parent_id.level` but lacks `recursive=True`, Odoo will not recompute correctly when ancestor records change.
 - **Forgetting `parent_path` field declaration:** Even though `_parent_store = True` implies parent_path, the field MUST be explicitly declared in the model with `index=True`.
@@ -248,14 +297,18 @@ Problems that look simple but have existing solutions:
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| Circular reference detection | Custom recursive check traversing parent_id chain | `self._check_recursion()` (built into Odoo ORM) | Handles edge cases (multi-record writes, concurrent updates) that custom code misses |
+| Circular reference detection | Custom recursive check traversing parent_id chain | `self._has_cycle()` (Odoo 18 built-in) | Handles edge cases (multi-record writes, concurrent updates) that custom code misses. NOTE: `_check_recursion()` is deprecated, use `_has_cycle()` with inverted semantics |
 | Hierarchy path storage | Custom parent_path computation logic | `_parent_store = True` + `parent_path = fields.Char(index=True)` | Odoo ORM maintains parent_path automatically on every write. Handles reparenting, deletion, and batch operations |
 | Fast hierarchy queries (child_of/parent_of) | Custom recursive SQL or CTE queries | `self.env['model'].search([('id', 'child_of', parent_id)])` | Uses indexed parent_path for O(1) lookups instead of recursive queries |
 | Record ordering with drag-drop | Custom JS sort implementation | `sequence = fields.Integer()` + `_order = 'sequence, id'` + `handle` widget in tree view | Native Odoo pattern, works out of the box with tree views |
 | Module scaffold | Manual file creation | `odoo scaffold module_name addons_path` | Generates correct directory structure, __init__.py, __manifest__.py with proper format |
 | Test infrastructure | Custom test runner | `odoo.tests.TransactionCase` + `--test-tags` CLI | Odoo's test framework handles database setup/teardown, transaction isolation, and module dependency loading |
 
-**Key insight:** Odoo's ORM provides `_check_recursion()`, `_parent_store`, and `parent_path` specifically for hierarchical models. These handle concurrent writes, batch operations, and edge cases that hand-rolled solutions inevitably miss.
+**Key insight:** Odoo's ORM provides `_has_cycle()` (Odoo 18), `_parent_store`, and `parent_path` specifically for hierarchical models. These handle concurrent writes, batch operations, and edge cases that hand-rolled solutions inevitably miss.
+
+**IMPORTANT:** In Odoo 18, use `_has_cycle()` not `_check_recursion()`. Semantics are inverted:
+- OLD: `if not self._check_recursion():` (returns True if no cycle)
+- NEW: `if self._has_cycle():` (returns True if cycle exists)
 
 ## Common Pitfalls
 
