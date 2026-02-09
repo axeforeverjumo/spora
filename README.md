@@ -22,7 +22,7 @@ docker-compose restart odoo
 
 - **URL**: http://localhost:8069
 - **Base de datos**: `odoo` (ya creada y configurada)
-- **Usuario**: `admin@example.com`
+- **Usuario**: `admin`
 - **Contraseña**: `admin`
 
 ## 📦 Módulo: spora_segment
